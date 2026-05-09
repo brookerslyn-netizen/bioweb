@@ -265,7 +265,8 @@ async function readConfig() {
         "paperGrain": true,
         "confetti": true,
         "konami": true,
-        "polaroidFlip": true
+        "polaroidFlip": true,
+        "spotify": true
       },
       "sectionOrder": [
         "hero",
