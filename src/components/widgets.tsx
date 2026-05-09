@@ -306,6 +306,8 @@ export function MusicPlayer({
   const [muted, setMuted] = useState(false);
   const [now, setNow] = useState(0);
   const [dur, setDur] = useState(0);
+  // When a Spotify recent track is clicked, this overrides the current queue track display
+  const [externalTrack, setExternalTrack] = useState<{ title: string; artist: string } | null>(null);
   const playerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -336,6 +338,8 @@ export function MusicPlayer({
           onStateChange: (e: { data: number }) => {
             if (window.YT?.PlayerState) {
               if (e.data === window.YT.PlayerState.ENDED) {
+                window.dispatchEvent(new CustomEvent("yt-track-ended"));
+                setExternalTrack(null);
                 next();
               } else if (e.data === window.YT.PlayerState.PLAYING) {
                 setPlaying(true);
@@ -386,10 +390,30 @@ export function MusicPlayer({
     return () => stopVinylCrackle();
   }, [enabled, playing, crackle, muted]);
 
+  /* listen for external "play this YT video" events from SpotifyRecent */
+  useEffect(() => {
+    if (!enabled) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { videoId: string; title: string; artist: string } | null;
+      if (!detail) {
+        // null means stop / clear external track
+        setExternalTrack(null);
+        playerRef.current?.pauseVideo();
+        return;
+      }
+      setExternalTrack({ title: detail.title, artist: detail.artist });
+      playerRef.current?.loadVideoById(detail.videoId);
+      playerRef.current?.playVideo();
+    };
+    window.addEventListener("play-yt-track", handler);
+    return () => window.removeEventListener("play-yt-track", handler);
+  }, [enabled]);
+
   function next() {
     if (!queue.length) return;
     const ni = (idx + 1) % queue.length;
     setIdx(ni);
+    setExternalTrack(null);
     playerRef.current?.loadVideoById(queue[ni].id);
     playerRef.current?.playVideo();
   }
@@ -397,6 +421,7 @@ export function MusicPlayer({
     if (!queue.length) return;
     const ni = (idx - 1 + queue.length) % queue.length;
     setIdx(ni);
+    setExternalTrack(null);
     playerRef.current?.loadVideoById(queue[ni].id);
     playerRef.current?.playVideo();
   }
@@ -412,6 +437,8 @@ export function MusicPlayer({
   if (!enabled || !queue.length) return null;
   const cur = queue[idx];
   const pct = dur > 0 ? Math.min(100, (now / dur) * 100) : 0;
+  const displayTitle = externalTrack ? externalTrack.title : cur.title;
+  const displayArtist = externalTrack ? externalTrack.artist : cur.artist;
 
   return (
     <div className="rounded-2xl p-4 paper paper-text relative">
@@ -446,9 +473,9 @@ export function MusicPlayer({
         <div className="min-w-0 flex-1">
           <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">now playing</div>
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
-            {cur.title}
+            {displayTitle}
           </div>
-          {cur.artist && <div className="text-xs paper-text-muted truncate">{cur.artist}</div>}
+          {displayArtist && <div className="text-xs paper-text-muted truncate">{displayArtist}</div>}
         </div>
       </div>
 

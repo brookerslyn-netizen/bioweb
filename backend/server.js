@@ -3,6 +3,7 @@ import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import ytSearch from 'yt-search';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -483,13 +484,33 @@ app.get('/api/spotify/recent', async (req, res) => {
       album: item.track.album.name,
       image: item.track.album.images[0]?.url || '',
       playedAt: item.played_at,
-      duration: item.track.duration_ms
+      duration: item.track.duration_ms,
+      previewUrl: item.track.preview_url || null
     }));
     
     res.json({ tracks, connected: true });
   } catch (error) {
     console.error('Error fetching recent tracks:', error);
     res.status(500).json({ error: 'Failed to fetch recent tracks' });
+  }
+});
+
+// YouTube search endpoint
+app.get('/api/youtube/search', async (req, res) => {
+  const query = req.query.q;
+  if (!query) {
+    return res.status(400).json({ error: 'Query parameter q is required' });
+  }
+  try {
+    const result = await ytSearch(String(query));
+    const video = result.videos[0];
+    if (!video) {
+      return res.status(404).json({ error: 'No results found' });
+    }
+    res.json({ videoId: video.videoId, title: video.title, author: video.author.name });
+  } catch (error) {
+    console.error('YouTube search error:', error);
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 
