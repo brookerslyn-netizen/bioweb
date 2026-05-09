@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const CONFIG_FILE = path.join(__dirname, 'config.json');
 
 // Store IP addresses of users who have commented
