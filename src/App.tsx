@@ -82,7 +82,7 @@ function App() {
           stickyNote: { enabled: false, text: "edit this note from the admin panel" },
           marqueeText: "touch grass • eat grass • git gud",
           footer: { headline: "see ya", sub: "", bottom: "", transFlairText: "TRANS PEOPLE CAN DOUBLE JUMP", showTransFlair: true },
-          features: { cursor: true, hearts: false, sparkles: false, marquee: true, music: true, transFlair: true, paperGrain: true, confetti: true, konami: true, polaroidFlip: true },
+          features: { cursor: true, hearts: false, sparkles: false, marquee: true, music: true, transFlair: true, paperGrain: true, confetti: true, konami: true, polaroidFlip: true, spotify: true },
           sectionOrder: ["hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "stuffIMade", "footer"]
         });
       } finally {
@@ -218,7 +218,7 @@ function App() {
       case "now":
         return <NowSection key="now" config={config} />;
       case "connections":
-        return <ConnectionsSection key="connections" config={config} />;
+        return <ConnectionsSection key="connections" config={config} apiBase={API_BASE} />;
       case "recent":
         return <RecentSection key="recent" config={config} />;
       case "favorites":

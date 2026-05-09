@@ -108,6 +108,7 @@ export type AppConfig = {
     confetti: boolean;
     konami: boolean;
     polaroidFlip: boolean;
+    spotify: boolean;
   };
 
   sectionOrder: SectionKey[];
@@ -212,6 +213,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     confetti: true,
     konami: true,
     polaroidFlip: true,
+    spotify: true,
   },
 
   sectionOrder: [

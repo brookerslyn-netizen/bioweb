@@ -11,8 +11,20 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const CONFIG_FILE = path.join(__dirname, 'config.json');
 
+// Spotify API Configuration
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '';
+const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || '';
+
 // Store IP addresses of users who have commented
 const commentIPs = new Set();
+
+// Spotify token storage (in production, use database)
+let spotifyTokens = {
+  accessToken: null,
+  refreshToken: null,
+  expiresAt: null
+};
 
 // Middleware
 app.use(cors());
@@ -337,6 +349,146 @@ app.post('/api/comments', async (req, res) => {
   } catch (error) {
     console.error('Error adding comment:', error);
     res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
+// Spotify API Routes
+
+// Get Spotify auth URL
+app.get('/api/spotify/auth', (req, res) => {
+  if (!SPOTIFY_CLIENT_ID) {
+    return res.status(500).json({ error: 'Spotify not configured' });
+  }
+  
+  const scope = 'user-read-recently-played';
+  const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${SPOTIFY_CLIENT_ID}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}`;
+  
+  res.json({ authUrl });
+});
+
+// Spotify OAuth callback
+app.get('/api/spotify/callback', async (req, res) => {
+  const code = req.query.code;
+  
+  if (!code) {
+    return res.status(400).json({ error: 'Authorization code required' });
+  }
+  
+  try {
+    const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64')
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: SPOTIFY_REDIRECT_URI
+      })
+    });
+    
+    const tokenData = await tokenResponse.json();
+    
+    if (tokenData.error) {
+      return res.status(400).json({ error: tokenData.error });
+    }
+    
+    spotifyTokens = {
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresAt: Date.now() + (tokenData.expires_in * 1000)
+    };
+    
+    res.json({ success: true, message: 'Spotify connected!' });
+  } catch (error) {
+    console.error('Spotify auth error:', error);
+    res.status(500).json({ error: 'Failed to authenticate with Spotify' });
+  }
+});
+
+// Refresh Spotify token
+async function refreshSpotifyToken() {
+  if (!spotifyTokens.refreshToken) return false;
+  
+  try {
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64')
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: spotifyTokens.refreshToken
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('Token refresh error:', data.error);
+      return false;
+    }
+    
+    spotifyTokens.accessToken = data.access_token;
+    spotifyTokens.expiresAt = Date.now() + (data.expires_in * 1000);
+    if (data.refresh_token) {
+      spotifyTokens.refreshToken = data.refresh_token;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to refresh token:', error);
+    return false;
+  }
+}
+
+// Get recently played tracks
+app.get('/api/spotify/recent', async (req, res) => {
+  if (!spotifyTokens.accessToken) {
+    return res.status(401).json({ error: 'Spotify not connected', needsAuth: true });
+  }
+  
+  // Check if token needs refresh
+  if (Date.now() >= spotifyTokens.expiresAt - 60000) {
+    const refreshed = await refreshSpotifyToken();
+    if (!refreshed) {
+      return res.status(401).json({ error: 'Token expired', needsAuth: true });
+    }
+  }
+  
+  try {
+    const response = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=10', {
+      headers: {
+        'Authorization': `Bearer ${spotifyTokens.accessToken}`
+      }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        return res.status(401).json({ error: 'Token expired', needsAuth: true });
+      }
+      throw new Error(`Spotify API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Format the tracks
+    const tracks = data.items.map(item => ({
+      id: item.track.id,
+      name: item.track.name,
+      artist: item.track.artists.map(a => a.name).join(', '),
+      album: item.track.album.name,
+      image: item.track.album.images[0]?.url || '',
+      playedAt: item.played_at,
+      duration: item.track.duration_ms
+    }));
+    
+    res.json({ tracks, connected: true });
+  } catch (error) {
+    console.error('Error fetching recent tracks:', error);
+    res.status(500).json({ error: 'Failed to fetch recent tracks' });
   }
 });
 

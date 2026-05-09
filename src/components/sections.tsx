@@ -154,9 +154,11 @@ export function NowSection({ config }: { config: AppConfig }) {
   );
 }
 
-/* ===================== Connections (Discord + Spotify + Email) ===================== */
+/* ===================== Connections (Discord + Spotify + Email + Recents) ===================== */
 
-export function ConnectionsSection({ config }: { config: AppConfig }) {
+import { SpotifyRecent } from "./SpotifyRecent";
+
+export function ConnectionsSection({ config, apiBase }: { config: AppConfig; apiBase?: string }) {
   const lan = useLanyard(config.contact.discordId);
   return (
     <section id="connections" className="px-6 py-8 max-w-4xl mx-auto">
@@ -174,6 +176,11 @@ export function ConnectionsSection({ config }: { config: AppConfig }) {
             enabled={config.music.enabled && config.features.music}
           />
         </div>
+        {config.features.spotify && apiBase && (
+          <div className="mt-4">
+            <SpotifyRecent apiBase={apiBase} />
+          </div>
+        )}
       </Reveal>
     </section>
   );
