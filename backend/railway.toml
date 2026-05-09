@@ -1,0 +1,15 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/api/health"
+
+[[services]]
+type = "web"
+name = "backend"
+plan = "free"
+
+[[services.volumes]]
+type = "file"
+mount = "/app"
