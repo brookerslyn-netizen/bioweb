@@ -187,7 +187,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`Config server running on http://localhost:${PORT}`);
+const HOST = '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+  console.log(`Config server running on http://${HOST}:${PORT}`);
   console.log(`Config file: ${CONFIG_FILE}`);
 });
