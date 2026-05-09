@@ -32,7 +32,6 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
       
       if (response.status === 401) {
         setConnected(false);
-        setError("Spotify not connected");
         setLoading(false);
         return;
       }
