@@ -175,7 +175,7 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
                 return (
                   <div
                     key={track.id}
-                    className="flex items-center gap-3 p-2 rounded transition-all hover:opacity-80 cursor-pointer group"
+                    className="flex items-center gap-3 p-2 rounded transition-all cursor-pointer group"
                     style={{
                       background: isPlaying
                         ? "rgba(var(--p-accent-rgb, 0,0,0), 0.08)"
@@ -192,7 +192,7 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
                           alt={track.album}
                           className="w-12 h-12 rounded object-cover"
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                           {isSearching ? (
                             <Loader2 className="w-5 h-5 text-white animate-spin" />
                           ) : isPlaying ? (
@@ -202,8 +202,7 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
                           )}
                         </div>
                         {isPlaying && (
-                          <div className="absolute inset-0 rounded ring-2 ring-offset-1 pointer-events-none"
-                            style={{ ringColor: "var(--p-accent)" }} />
+                          <div className="absolute inset-0 rounded pointer-events-none" style={{ outline: "2px solid var(--p-accent)", outlineOffset: "-2px" }} />
                         )}
                       </div>
                     )}

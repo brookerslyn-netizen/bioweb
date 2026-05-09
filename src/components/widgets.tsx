@@ -59,27 +59,29 @@ export function SpotifyNowPlaying({
 
   if (!spotify || !spotify.timestamps) {
     return (
-      <a
-        href={fallbackUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="block rounded-2xl p-4 paper paper-text hover:scale-[1.01] transition-transform"
-      >
+      <div className="rounded-2xl p-4 paper paper-text">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl flex items-center justify-center palette-accent-bg">
             <Music2 size={20} />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">spotify</div>
             <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
               not playing
             </div>
-            <div className="text-xs paper-text-muted truncate">
-              visit my spotify <ExternalLink size={11} className="inline" />
-            </div>
+            <div className="text-xs paper-text-muted truncate">not listening right now</div>
           </div>
+          <a
+            href={fallbackUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-shrink-0 p-2 rounded-lg hover:bg-black/10 transition-colors"
+            title="visit my spotify"
+          >
+            <ExternalLink size={14} className="paper-text-muted" />
+          </a>
         </div>
-      </a>
+      </div>
     );
   }
   const total = spotify.timestamps.end - spotify.timestamps.start;
