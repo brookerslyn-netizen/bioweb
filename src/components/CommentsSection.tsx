@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Send, Calendar } from "lucide-react";
+import { MessageSquare, Send } from "lucide-react";
 import { Reveal, Doodle } from "./parts";
 import type { CommentEntry } from "../lib/config";
 

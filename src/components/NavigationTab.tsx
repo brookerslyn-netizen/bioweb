@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, MessageSquare, Home } from "lucide-react";
+import { X, MessageSquare, Home } from "lucide-react";
 import { Doodle } from "./parts";
 
 type View = "main" | "comments";
