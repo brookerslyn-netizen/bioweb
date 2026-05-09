@@ -35,82 +35,240 @@ async function readConfig() {
   } catch (error) {
     // If file doesn't exist, return default config
     const defaultConfig = {
-      paletteId: "forest",
-      customPalettes: [],
-      bgUrl: "",
-      hero: {
-        name: "brook",
-        handle: "@brookerslyn",
-        subtitle: "chronically dumb",
-        typingLinesText: "touch grass\neat grass",
-        scrollHint: "scroll for screamers",
-        splashText: "click to steal your data",
-        showSparkles: false,
+      "paletteId": "diary",
+      "customPalettes": [],
+      "bgUrl": "",
+      "hero": {
+        "name": "brook",
+        "handle": "@brookerslyn",
+        "subtitle": "chronically dumb",
+        "typingLinesText": "touch grass\neat grass",
+        "scrollHint": "scroll for screamers",
+        "splashText": "click to steal your data",
+        "showSparkles": false
       },
-      about: {
-        title: "about me",
-        body: "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us",
-        tagsText: "ass sleep schedule, true idiot, sucks at guitar",
-        age: "16",
-        timezone: "GMT+5",
-        showAge: true,
-        showTimezone: true,
+      "about": {
+        "title": "about me",
+        "body": "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us\nyeah i also mod for roblox games who would've thought (alternate battlegrounds!!)\neat grass\n",
+        "tagsText": "ass sleep schedule, true idiot, sucks at guitar",
+        "age": "16",
+        "timezone": "GMT+5",
+        "showAge": true,
+        "showTimezone": true
       },
-      nowListText: "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk",
-      contact: {
-        email: "brookerslyn@gmail.com",
-        showEmail: true,
-        discordId: "647814047210930223",
-        showCopyDiscord: true,
-        spotifyUrl: "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f",
-        steamId: "",
+      "nowListText": "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk\nor not",
+      "contact": {
+        "email": "brookerslyn@gmail.com",
+        "showEmail": true,
+        "discordId": "647814047210930223",
+        "showCopyDiscord": true,
+        "spotifyUrl": "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f",
+        "steamId": "76561199702812419"
       },
-      music: {
-        enabled: true,
-        volume: 50,
-        autoplay: true,
-        visual: "vinyl",
-        crackle: true,
-        playlist: [{ id: "3IpM7RK0GeY", title: "track 1" }],
+      "music": {
+        "enabled": true,
+        "volume": 100,
+        "autoplay": true,
+        "visual": "cassette",
+        "crackle": true,
+        "playlist": [
+          {
+            "id": "Nmemc-b6cdU",
+            "title": "Summer Slack"
+          },
+          {
+            "id": "bIW0n36TUSQ",
+            "title": "Nareai Serve"
+          },
+          {
+            "id": "WpRcRYoHqxE",
+            "title": "DROP"
+          }
+        ]
       },
-      favorites: {
-        games: [{ emoji: "🍓", label: "celeste", note: "still on farewell", imageUrl: "" }],
-        music: [{ emoji: "🎸", label: "edit me", note: "from the admin panel", imageUrl: "" }],
-        movies: [{ emoji: "🎬", label: "edit me", note: "from the admin panel", imageUrl: "" }],
-        food: [{ emoji: "🍜", label: "edit me", note: "from the admin panel", imageUrl: "" }],
+      "favorites": {
+        "games": [
+          {
+            "emoji": "🍓",
+            "label": "celeste",
+            "note": "still on farewell",
+            "imageUrl": "https://media.tenor.com/NjXUcFTS_EkAAAAj/madeline-celeste.gif"
+          },
+          {
+            "emoji": "★",
+            "label": "omori ",
+            "note": "heh 100% completion in 75 hours",
+            "imageUrl": "https://media.tenor.com/Z1iZAJCTQoUAAAAj/mewo.gif"
+          },
+          {
+            "emoji": "★",
+            "label": "deltarune",
+            "note": "dont forget im under your bed",
+            "imageUrl": "https://i.redd.it/egbnebde4z5f1.gif"
+          }
+        ],
+        "music": [
+          {
+            "emoji": "🎸",
+            "label": "kessoku band",
+            "note": "uh yeah its the group from bocchi the rock",
+            "imageUrl": "https://i.pinimg.com/originals/48/47/2b/48472b7707470c23b105a68746cd22bb.jpg"
+          }
+        ],
+        "movies": [
+          {
+            "emoji": "🎬",
+            "label": "bocchi the rock",
+            "note": "thats surprising i didnt know",
+            "imageUrl": "https://m.media-amazon.com/images/I/91tiRtwMXsL.jpg"
+          },
+          {
+            "emoji": "★",
+            "label": "Josee the Tiger and the FIsh",
+            "note": "goated movie go watch it",
+            "imageUrl": "https://blog.alltheanime.com/wp-content/uploads/2022/06/Josee-the-Tiger-and-the-Fish.jpg"
+          },
+          {
+            "emoji": "★",
+            "label": "jojos idk",
+            "note": "yeah jojo is peak i didnt watch stone ocean tho",
+            "imageUrl": "https://m.media-amazon.com/images/M/MV5BMzIyNzY4NTMtNmVhYS00OWFhLTkwMWMtOGFkNTdmNWU2ZDdiXkEyXkFqcGc@._V1_.jpg"
+          }
+        ],
+        "food": [
+          {
+            "emoji": "🍜",
+            "label": "honestly no idea what to put here",
+            "note": "yeah no shit i dont know ",
+            "imageUrl": ""
+          }
+        ]
       },
-      guestbook: [],
-      stickers: [],
-      recent: [],
-      stuffIMade: [],
-      comments: [],
-      stickyNote: {
-        enabled: false,
-        text: "edit this note from the admin panel",
-      },
-      marqueeText: "touch grass • eat grass • git gud",
-      footer: {
-        headline: "see ya",
-        sub: "",
-        bottom: "",
-        transFlairText: "TRANS PEOPLE CAN DOUBLE JUMP",
-        showTransFlair: true,
-      },
-      features: {
-        cursor: true,
-        hearts: false,
-        sparkles: false,
-        marquee: true,
-        music: true,
-        transFlair: true,
-        paperGrain: true,
-        confetti: true,
-        konami: true,
-        polaroidFlip: true,
-      },
-      sectionOrder: [
-        "hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "stuffIMade", "footer"
+      "guestbook": [],
+      "stickers": [
+        {
+          "id": "67y4z1fp",
+          "emoji": "🌱",
+          "label": "madeline",
+          "imageUrl": "https://i.pinimg.com/originals/1c/9d/6c/1c9d6c8981fe59b7627dfd078f965d7f.gif"
+        }
       ],
+      "recent": [],
+      "stuffIMade": [
+        {
+          "emoji": "✨",
+          "title": "this bio!",
+          "blurb": "yeah its so cool i know guys",
+          "tag": "wip",
+          "url": ""
+        }
+      ],
+      "comments": [
+        {
+          "id": "1778327008325",
+          "name": "Talking Patzer",
+          "message": "rapidly declining mental function",
+          "timestamp": "2026-05-09T11:43:28.325Z"
+        },
+        {
+          "id": "1778324940443",
+          "name": "Totally not Niko from oneshot",
+          "message": "You should play oneshot",
+          "timestamp": "2026-05-09T11:09:00.443Z"
+        },
+        {
+          "id": "1778324366081",
+          "name": "Not Waffles",
+          "message": "Don't sybrookau",
+          "timestamp": "2026-05-09T10:59:26.081Z"
+        },
+        {
+          "id": "1778324337424",
+          "name": "NOT maple",
+          "message": "if larping is your power what are you without it",
+          "timestamp": "2026-05-09T10:58:57.424Z"
+        },
+        {
+          "id": "1778323891915",
+          "name": "Corrosion",
+          "message": "The FitnessGram Pacer Test is a multistage aerobic capacity test that progressively gets more difficult as it continues. The 20 meter pacer test will begin in 30 seconds. Line up at the start. The run",
+          "timestamp": "2026-05-09T10:51:31.915Z"
+        },
+        {
+          "id": "1778322182821",
+          "name": "Hokyo",
+          "message": "Kys",
+          "timestamp": "2026-05-09T10:23:02.821Z"
+        },
+        {
+          "id": "1778321188159",
+          "name": "real brook",
+          "message": "i love grass",
+          "timestamp": "2026-05-09T10:06:28.159Z"
+        },
+        {
+          "id": "1778319572270",
+          "name": "Mars",
+          "message": "Can I have half your paycheck pls",
+          "timestamp": "2026-05-09T09:39:32.270Z"
+        },
+        {
+          "id": "1778319378446",
+          "name": "Gaster",
+          "message": "Collect my aba moves",
+          "timestamp": "2026-05-09T09:36:18.446Z"
+        },
+        {
+          "id": "1778318760068",
+          "name": "skinwalker brook",
+          "message": "I l o v e g r a s s :)\nI l o v e g r a s s :)\nI l o v e g r a s s :)\ng r a s s i s g r e e n .",
+          "timestamp": "2026-05-09T09:26:00.068Z"
+        },
+        {
+          "id": "1778317848487",
+          "name": "evil brook",
+          "message": "i HATE grass!!!",
+          "timestamp": "2026-05-09T09:10:48.487Z"
+        }
+      ],
+      "stickyNote": {
+        "enabled": true,
+        "text": "not the final version\n"
+      },
+      "marqueeText": "touch grass • eat grass • git gud",
+      "footer": {
+        "headline": "see ya",
+        "sub": "or not",
+        "bottom": "brook",
+        "transFlairText": "TRANS PEOPLE CAN DOUBLE JUMP",
+        "showTransFlair": true
+      },
+      "features": {
+        "cursor": true,
+        "hearts": true,
+        "sparkles": true,
+        "marquee": true,
+        "music": true,
+        "transFlair": true,
+        "paperGrain": true,
+        "confetti": true,
+        "konami": true,
+        "polaroidFlip": true
+      },
+      "sectionOrder": [
+        "hero",
+        "marquee",
+        "about",
+        "now",
+        "connections",
+        "recent",
+        "favorites",
+        "guestbook",
+        "stickers",
+        "steam",
+        "stuffIMade",
+        "footer"
+      ]
     };
     await writeConfig(defaultConfig);
     return defaultConfig;
