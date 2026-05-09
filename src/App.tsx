@@ -9,16 +9,13 @@ import {
   customPaletteToVars,
   BUILTIN_PALETTES,
 } from "./lib/palettes";
-import {
-  loadConfig,
-  saveConfig,
-  clearConfigCache,
-  pushHistory,
-  checkAdminAuth,
-  logoutAdmin,
-  type AppConfig,
-  type SectionKey,
-} from "./lib/config";
+import { loadConfig, saveConfig, clearConfigCache, pushHistory, checkAdminAuth, logoutAdmin, type AppConfig, type SectionKey, } from "./lib/config";
+
+const API_BASE = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? "/api"  // In production, API will be on same domain
+    : "http://localhost:3001/api");
+
 import {
   PencilCursor,
   BerryFollower,
@@ -175,7 +172,7 @@ function App() {
     try {
       console.log('Submitting comment:', { name, message });
       
-      const response = await fetch('http://localhost:3001/api/comments', {
+      const response = await fetch(`${API_BASE}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
