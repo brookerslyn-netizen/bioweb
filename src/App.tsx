@@ -24,7 +24,6 @@ import {
   Doodle,
   useKonami,
   useClickConfetti,
-  useHoverRustle,
 } from "./components/parts";
 import {
   HeroSection,
@@ -149,7 +148,7 @@ function App() {
     return b.vars["--p-accent"];
   }, [config?.paletteId, config?.customPalettes]);
   useClickConfetti((entered && config?.features.confetti) ?? false, accent);
-  useHoverRustle(entered);
+  // useHoverRustle(entered); // Disabled - hover sound removed
 
   /* === splash transition === */
   const handleEnter = useCallback(() => {
