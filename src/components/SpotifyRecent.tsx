@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Music, ExternalLink, Clock, Play, Pause, Loader2 } from "lucide-react";
+import { Music, Clock, Play, Pause, Loader2 } from "lucide-react";
 import { Reveal, Doodle } from "./parts";
 
 interface Track {
@@ -227,15 +227,6 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
                         <Clock className="w-3 h-3" />
                         {formatTimeAgo(track.playedAt)}
                       </span>
-                      <a
-                        href={`https://open.spotify.com/track/${track.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 hover:bg-black/10 rounded transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ExternalLink className="w-3 h-3 paper-text-muted" />
-                      </a>
                     </div>
                   </div>
                 );
