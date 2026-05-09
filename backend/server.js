@@ -18,11 +18,6 @@ const commentIPs = new Set();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-}
-
 // Get client IP address
 function getClientIP(req) {
   return req.ip || 
@@ -191,13 +186,6 @@ app.post('/api/comments', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
-
-// Catch-all handler for React app in production
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-}
 
 app.listen(PORT, () => {
   console.log(`Config server running on http://localhost:${PORT}`);
