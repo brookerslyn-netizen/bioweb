@@ -235,9 +235,10 @@ export const DEFAULT_CONFIG: AppConfig = {
 const CONFIG_KEY = "brook-config";
 const HISTORY_KEY = "brook-config-history";
 const HISTORY_LIMIT = 10;
-const API_BASE = import.meta.env.PROD 
-  ? "/api"  // In production, API will be on same domain
-  : "http://localhost:3001/api";
+const API_BASE = import.meta.env.VITE_API_URL || 
+  (import.meta.env.PROD 
+    ? "/api"  // In production, API will be on same domain
+    : "http://localhost:3001/api");
 
 export function clearConfigCache() {
   localStorage.removeItem(CONFIG_KEY);
