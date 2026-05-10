@@ -1,0 +1,20 @@
+{
+  "name": "brookerslyn-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend API for brookerslyn bio website",
+  "main": "server.js",
+  "scripts": {
+    "build": "echo 'No build needed for backend'",
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "yt-search": "^2.13.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
