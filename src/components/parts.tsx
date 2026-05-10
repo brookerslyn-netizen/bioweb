@@ -181,36 +181,28 @@ export function Typewriter({ lines }: { lines: string[] }) {
 
 /* ===================== Splash (page rip to enter) ===================== */
 
-/* Irregular hand-torn seam. Each entry is [y%, xOffset% from center].
-   Points shared by both halves so the clips fit together with no gap. */
-const TEAR_POINTS: [number, number][] = [
-  [0,   0],
-  [3,  -0.8],
-  [6.5, 1.6],
-  [10, -2.2],
-  [14,  0.7],
-  [17,  2.3],
-  [21, -1.1],
-  [25, -2.4],
-  [29,  0.6],
-  [33,  1.9],
-  [37, -0.9],
-  [41,  2.2],
-  [46,  0.3],
-  [49, -1.7],
-  [54,  1.5],
-  [58, -2.1],
-  [63,  0.9],
-  [67,  2.3],
-  [72, -1.3],
-  [76,  0.4],
-  [81,  2.0],
-  [85, -1.7],
-  [90,  0.8],
-  [94, -1.3],
-  [97,  1.1],
-  [100, 0],
-];
+/* Dense jagged seam — lots of points with aggressive jitter so the torn
+   edge reads as fibrous paper rather than a smooth curve. */
+const TEAR_POINTS: [number, number][] = (() => {
+  const pts: [number, number][] = [];
+  // deterministic pseudo-random so the shape is stable
+  let seed = 9871;
+  const rand = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return (seed / 0x7fffffff);
+  };
+  pts.push([0, 0]);
+  const steps = 80;
+  for (let i = 1; i < steps; i++) {
+    const y = (i / steps) * 100;
+    // bigger primary jitter + occasional "fibre" spikes
+    let dx = (rand() - 0.5) * 4.5;
+    if (rand() < 0.18) dx += (rand() - 0.5) * 3.5; // random fiber spike
+    pts.push([y, dx]);
+  }
+  pts.push([100, 0]);
+  return pts;
+})();
 
 const LEFT_POLYGON = (() => {
   const pts: string[] = ["0% 0%"];
@@ -224,14 +216,6 @@ const RIGHT_POLYGON = (() => {
   for (const [y, dx] of TEAR_POINTS) pts.push(`${50 + dx}% ${y}%`);
   pts.push("100% 100%", "100% 0%");
   return `polygon(${pts.join(", ")})`;
-})();
-
-const TEAR_PATH_D = (() => {
-  const parts: string[] = [];
-  TEAR_POINTS.forEach(([y, dx], i) => {
-    parts.push(`${i === 0 ? "M" : "L"} ${50 + dx} ${y}`);
-  });
-  return parts.join(" ");
 })();
 
 type SplashStage = "idle" | "tearing" | "falling";
@@ -255,13 +239,12 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     audioRef.current = audio;
     audio.play().catch(() => { /* autoplay blocked — animation still runs */ });
 
+    // Tear + slide apart, then fall off-screen.
     setStage("tearing");
-    // Tear phase: seam draws + halves pull apart slightly (~950ms).
     const t1 = setTimeout(() => {
       setStage("falling");
-      // Fire onEnter now; App will unmount the splash ~700ms later as the halves slide off.
       onEnter();
-    }, 950);
+    }, 750);
 
     return () => clearTimeout(t1);
   }, [onEnter]);
@@ -298,45 +281,30 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
       className="splash-root"
       data-stage={stage}
     >
-      {/* inject computed clip-paths for left/right halves */}
       <style>{`
         .splash-left-clip { clip-path: ${LEFT_POLYGON}; -webkit-clip-path: ${LEFT_POLYGON}; }
         .splash-right-clip { clip-path: ${RIGHT_POLYGON}; -webkit-clip-path: ${RIGHT_POLYGON}; }
       `}</style>
 
-      {/* dark gap shadow behind the seam */}
-      <div className="splash-seam-shadow" aria-hidden />
-
-      {/* washi tape layers — each clipped to its side so tape doesn't float across the seam */}
-      <div className="splash-washi-layer splash-left-clip">
+      {/* washi tape layers */}
+      <div className="splash-washi-layer splash-left-clip splash-left-move">
         <div className="absolute top-[15%] left-[10%] washi washi-pink" style={{ width: 80, height: 18, transform: "rotate(-18deg)", opacity: 0.5 }} />
         <div className="absolute bottom-[25%] left-[18%] washi washi-yellow" style={{ width: 90, height: 18, transform: "rotate(6deg)", opacity: 0.45 }} />
       </div>
-      <div className="splash-washi-layer splash-right-clip">
+      <div className="splash-washi-layer splash-right-clip splash-right-move">
         <div className="absolute top-[20%] right-[12%] washi washi-mint" style={{ width: 70, height: 18, transform: "rotate(12deg)", opacity: 0.4 }} />
         <div className="absolute bottom-[18%] right-[15%] washi washi-lavender" style={{ width: 65, height: 18, transform: "rotate(-10deg)", opacity: 0.35 }} />
       </div>
 
-      {/* LEFT half — the "held" side: stays put during tear, falls last */}
-      <div className="splash-half splash-left splash-left-clip">
+      {/* LEFT half — carries the whole face, clipped to the left side of the tear */}
+      <div className="splash-half splash-left splash-left-clip splash-left-move">
         {content}
       </div>
 
-      {/* RIGHT half — pulled toward viewer, detaches and falls first */}
-      <div className="splash-half splash-right splash-right-clip">
+      {/* RIGHT half — same face, clipped to the right */}
+      <div className="splash-half splash-right splash-right-clip splash-right-move">
         {content}
       </div>
-
-      {/* hand-drawn jagged tear line — draws from top to bottom during tear */}
-      <svg
-        className="splash-tear-line"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        <path d={TEAR_PATH_D} className="splash-tear-highlight" vectorEffect="non-scaling-stroke" pathLength={100} />
-        <path d={TEAR_PATH_D} className="splash-tear-ink"       vectorEffect="non-scaling-stroke" pathLength={100} />
-      </svg>
     </div>
   );
 }
