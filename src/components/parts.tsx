@@ -181,18 +181,37 @@ export function Typewriter({ lines }: { lines: string[] }) {
 
 /* ===================== Splash (page rip to enter) ===================== */
 
-/* Shared zigzag for both halves' inner edges and the visible tear line.
-   Points are (y%, xOffsetFromCenter%). Both halves use the same offsets so they
-   fit together like puzzle pieces before the tear. */
+/* Irregular hand-torn seam. Each entry is [y%, xOffset% from center].
+   Points shared by both halves so the clips fit together with no gap. */
 const TEAR_POINTS: [number, number][] = [
-  [0, 0], [4, -1.1], [8, 1.3], [12, -1.6], [16, 1.8], [20, -1.3], [24, 0.9],
-  [28, -2.1], [32, 1.1], [36, -0.6], [40, 1.5], [44, -1.6], [48, 1.3],
-  [52, -0.9], [56, 0.6], [60, -1.9], [64, 1.4], [68, -1.1], [72, 0.9],
-  [76, -0.6], [80, 1.7], [84, -1.4], [88, 1.0], [92, -1.2], [96, 0.5], [100, 0],
+  [0,   0],
+  [3,  -0.8],
+  [6.5, 1.6],
+  [10, -2.2],
+  [14,  0.7],
+  [17,  2.3],
+  [21, -1.1],
+  [25, -2.4],
+  [29,  0.6],
+  [33,  1.9],
+  [37, -0.9],
+  [41,  2.2],
+  [46,  0.3],
+  [49, -1.7],
+  [54,  1.5],
+  [58, -2.1],
+  [63,  0.9],
+  [67,  2.3],
+  [72, -1.3],
+  [76,  0.4],
+  [81,  2.0],
+  [85, -1.7],
+  [90,  0.8],
+  [94, -1.3],
+  [97,  1.1],
+  [100, 0],
 ];
 
-/* Polygon for the left half — fills the left portion of the viewport,
-   with the jagged right edge matching TEAR_POINTS. */
 const LEFT_POLYGON = (() => {
   const pts: string[] = ["0% 0%"];
   for (const [y, dx] of TEAR_POINTS) pts.push(`${50 + dx}% ${y}%`);
@@ -200,7 +219,6 @@ const LEFT_POLYGON = (() => {
   return `polygon(${pts.join(", ")})`;
 })();
 
-/* Polygon for the right half — same jagged inner edge, flipped to the left side. */
 const RIGHT_POLYGON = (() => {
   const pts: string[] = [];
   for (const [y, dx] of TEAR_POINTS) pts.push(`${50 + dx}% ${y}%`);
@@ -208,7 +226,6 @@ const RIGHT_POLYGON = (() => {
   return `polygon(${pts.join(", ")})`;
 })();
 
-/* Path d-string for the animated tear line overlay. */
 const TEAR_PATH_D = (() => {
   const parts: string[] = [];
   TEAR_POINTS.forEach(([y, dx], i) => {
@@ -225,7 +242,6 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
   name: string;
   splashText: string;
 }) {
-  // use internal stage machine; external `leaving` is ignored now since we drive the whole animation in-component
   const [stage, setStage] = useState<SplashStage>("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
@@ -237,16 +253,15 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     const audio = new Audio(tearMp3);
     audio.volume = 0.95;
     audioRef.current = audio;
-    audio.play().catch(() => { /* autoplay blocked — anim still runs */ });
+    audio.play().catch(() => { /* autoplay blocked — animation still runs */ });
 
+    // Tear phase: seam draws from top to bottom while right half peels forward.
     setStage("tearing");
-    // Tear phase drives the peel + tear-line draw; matches the 950–1000ms CSS animation.
     const t1 = setTimeout(() => {
       setStage("falling");
-      // kick App's unmount timer in parallel with the fall so splash leaves the tree
-      // right as the left half finishes its drop (~980ms combined with App's timer).
+      // Unmount in parallel with the fall; App waits ~1000ms for the pieces to exit.
       onEnter();
-    }, 980);
+    }, 1300);
 
     return () => clearTimeout(t1);
   }, [onEnter]);
@@ -271,7 +286,7 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
       </p>
       <div className="mt-6 inline-block">
         <p className="text-xs uppercase tracking-[0.3em] font-mono palette-text-muted animate-pulse">
-          ✂️ click anywhere
+          click anywhere
         </p>
       </div>
     </div>
@@ -283,38 +298,47 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
       className="splash-root"
       data-stage={stage}
     >
-      <div className="splash-bg" />
+      {/* inject computed clip-paths for left/right halves */}
+      <style>{`
+        .splash-left-clip { clip-path: ${LEFT_POLYGON}; -webkit-clip-path: ${LEFT_POLYGON}; }
+        .splash-right-clip { clip-path: ${RIGHT_POLYGON}; -webkit-clip-path: ${RIGHT_POLYGON}; }
+      `}</style>
 
-      {/* scattered washi tape — stays glued to the left half via its own clip-path */}
-      <div className="splash-washi-layer" style={{ clipPath: LEFT_POLYGON, WebkitClipPath: LEFT_POLYGON }}>
+      {/* backdrop behind the paper — darkens slightly so peeled half reads as "in front" */}
+      <div className="splash-backdrop" />
+
+      {/* dark gap that appears behind the seam as the pieces separate */}
+      <div className="splash-seam-shadow" aria-hidden />
+
+      {/* washi tape layers — each clipped to its side so tape doesn't float across the seam */}
+      <div className="splash-washi-layer splash-left-clip">
         <div className="absolute top-[15%] left-[10%] washi washi-pink" style={{ width: 80, height: 18, transform: "rotate(-18deg)", opacity: 0.5 }} />
         <div className="absolute bottom-[25%] left-[18%] washi washi-yellow" style={{ width: 90, height: 18, transform: "rotate(6deg)", opacity: 0.45 }} />
       </div>
-      <div className="splash-washi-layer splash-washi-right" style={{ clipPath: RIGHT_POLYGON, WebkitClipPath: RIGHT_POLYGON }}>
+      <div className="splash-washi-layer splash-right-clip">
         <div className="absolute top-[20%] right-[12%] washi washi-mint" style={{ width: 70, height: 18, transform: "rotate(12deg)", opacity: 0.4 }} />
         <div className="absolute bottom-[18%] right-[15%] washi washi-lavender" style={{ width: 65, height: 18, transform: "rotate(-10deg)", opacity: 0.35 }} />
       </div>
 
-      {/* LEFT half — clipped, stays put during tear, falls last */}
-      <div className="splash-half splash-left" style={{ clipPath: LEFT_POLYGON, WebkitClipPath: LEFT_POLYGON }}>
+      {/* LEFT half — the "held" side: stays put during tear, falls last */}
+      <div className="splash-half splash-left splash-left-clip">
         {content}
       </div>
 
-      {/* RIGHT half — clipped, peels forward during tear, falls first */}
-      <div className="splash-half splash-right" style={{ clipPath: RIGHT_POLYGON, WebkitClipPath: RIGHT_POLYGON }}>
+      {/* RIGHT half — pulled toward viewer, detaches and falls first */}
+      <div className="splash-half splash-right splash-right-clip">
         {content}
       </div>
 
-      {/* animated jagged tear line — draws downward during the tear */}
+      {/* hand-drawn jagged tear line — draws from top to bottom during tear */}
       <svg
         className="splash-tear-line"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         aria-hidden
       >
-        {/* soft highlight underneath, then the dark ink seam */}
-        <path d={TEAR_PATH_D} className="splash-tear-highlight" vectorEffect="non-scaling-stroke" />
-        <path d={TEAR_PATH_D} className="splash-tear-ink"       vectorEffect="non-scaling-stroke" />
+        <path d={TEAR_PATH_D} className="splash-tear-highlight" vectorEffect="non-scaling-stroke" pathLength={100} />
+        <path d={TEAR_PATH_D} className="splash-tear-ink"       vectorEffect="non-scaling-stroke" pathLength={100} />
       </svg>
     </div>
   );

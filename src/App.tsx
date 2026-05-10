@@ -154,8 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    // matches the splash-right-fall + splash-left-fall (220ms delay + 760ms) in App.css
-    setTimeout(() => setEntered(true), 1050);
+    // covers the falling animations (right 750ms + left 780ms @ 180ms delay = ~960ms)
+    setTimeout(() => setEntered(true), 1000);
   }, []);
 
   function logout() {
