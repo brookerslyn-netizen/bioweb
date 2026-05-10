@@ -310,6 +310,8 @@ export function MusicPlayer({
   const [dur, setDur] = useState(0);
   // When a Spotify recent track is clicked, this overrides the current queue track display
   const [externalTrack, setExternalTrack] = useState<{ title: string; artist: string } | null>(null);
+  // Track the actual YT video ID currently loaded (may differ from queue[idx].id when external)
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const playerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -332,6 +334,7 @@ export function MusicPlayer({
           onReady: (e: { target: YTPlayer }) => {
             playerRef.current = e.target;
             e.target.setVolume(muted ? 0 : volume);
+            setActiveVideoId(queue[0].id);
             if (autoplay) {
               e.target.playVideo();
               setPlaying(true);
@@ -398,12 +401,13 @@ export function MusicPlayer({
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail as { videoId: string; title: string; artist: string } | null;
       if (!detail) {
-        // null means stop / clear external track
         setExternalTrack(null);
+        setActiveVideoId(null);
         playerRef.current?.pauseVideo();
         return;
       }
       setExternalTrack({ title: detail.title, artist: detail.artist });
+      setActiveVideoId(detail.videoId);
       playerRef.current?.loadVideoById(detail.videoId);
       playerRef.current?.playVideo();
     };
@@ -416,6 +420,8 @@ export function MusicPlayer({
     const ni = (idx + 1) % queue.length;
     setIdx(ni);
     setExternalTrack(null);
+    setActiveVideoId(queue[ni].id);
+    window.dispatchEvent(new CustomEvent("yt-track-ended")); // clears SpotifyRecent playing state
     playerRef.current?.loadVideoById(queue[ni].id);
     playerRef.current?.playVideo();
   }
@@ -424,6 +430,8 @@ export function MusicPlayer({
     const ni = (idx - 1 + queue.length) % queue.length;
     setIdx(ni);
     setExternalTrack(null);
+    setActiveVideoId(queue[ni].id);
+    window.dispatchEvent(new CustomEvent("yt-track-ended")); // clears SpotifyRecent playing state
     playerRef.current?.loadVideoById(queue[ni].id);
     playerRef.current?.playVideo();
   }
@@ -441,8 +449,8 @@ export function MusicPlayer({
   const pct = dur > 0 ? Math.min(100, (now / dur) * 100) : 0;
   const displayTitle = externalTrack ? externalTrack.title : cur.title;
   const displayArtist = externalTrack ? externalTrack.artist : cur.artist;
-  // YouTube thumbnail for album art on the visual
-  const thumbUrl = cur.id ? `https://img.youtube.com/vi/${cur.id}/mqdefault.jpg` : null;
+  // Use the actual playing video ID for the thumbnail (may be an external/Spotify track)
+  const thumbUrl = activeVideoId ? `https://img.youtube.com/vi/${activeVideoId}/mqdefault.jpg` : null;
 
   return (
     <div className="rounded-2xl p-4 paper paper-text relative">
