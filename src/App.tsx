@@ -154,8 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    // matches the .splash-rip-* fall animation duration in App.css
-    setTimeout(() => setEntered(true), 900);
+    // matches the splash-right-fall + splash-left-fall (220ms delay + 760ms) in App.css
+    setTimeout(() => setEntered(true), 1050);
   }, []);
 
   function logout() {
