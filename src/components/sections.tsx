@@ -157,16 +157,24 @@ export function NowSection({ config }: { config: AppConfig }) {
 /* ===================== Connections (Discord + Spotify + Email + Recents) ===================== */
 
 import { SpotifyRecent } from "./SpotifyRecent";
-import { LastFmWidget } from "./LastFmWidget";
+import { LastFmCard } from "./LastFmWidget";
 
 export function ConnectionsSection({ config, apiBase }: { config: AppConfig; apiBase?: string }) {
   const lan = useLanyard(config.contact.discordId);
+  const lfUser = config.contact.lastfmUsername || "";
   return (
     <section id="connections" className="px-6 py-8 max-w-4xl mx-auto">
       <Reveal>
         <div className="grid md:grid-cols-2 gap-4">
           <DiscordCard discordId={config.contact.discordId} showCopy={config.contact.showCopyDiscord} />
-          <SpotifyNowPlaying spotify={lan?.spotify} fallbackUrl={config.contact.spotifyUrl} />
+          {lfUser ? (
+            <LastFmCard
+              username={lfUser}
+              fallbackUrl={`https://www.last.fm/user/${lfUser}`}
+            />
+          ) : (
+            <SpotifyNowPlaying spotify={lan?.spotify} fallbackUrl={config.contact.spotifyUrl} />
+          )}
           {config.contact.showEmail && <EmailCard email={config.contact.email} />}
           <MusicPlayer
             playlist={config.music.playlist}
@@ -186,13 +194,12 @@ export function ConnectionsSection({ config, apiBase }: { config: AppConfig; api
     </section>
   );
 }
-
 /* ===================== Last.fm ===================== */
 
 export function LastFmSection({ config }: { config: AppConfig }) {
   const username = config.contact.lastfmUsername;
   if (!username) return null;
-  return <LastFmWidget username={username} />;
+  return <LastFmCard username={username} fallbackUrl={`https://www.last.fm/user/${username}`} />;
 }
 
 export function RecentSection({ config }: { config: AppConfig }) {

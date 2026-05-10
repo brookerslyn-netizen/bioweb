@@ -80,7 +80,7 @@ function App() {
           contact: { email: "brookerslyn@gmail.com", showEmail: true, discordId: "647814047210930223", showCopyDiscord: true, spotifyUrl: "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f", steamId: "" },
           music: { enabled: true, volume: 50, autoplay: true, visual: "vinyl", crackle: true, playlist: [{ id: "3IpM7RK0GeY", title: "track 1" }] },
           favorites: { games: [{ emoji: "🍓", label: "celeste", note: "still on farewell" }], music: [{ emoji: "🎸", label: "edit me", note: "from the admin panel" }], movies: [{ emoji: "🎬", label: "edit me", note: "from the admin panel" }], food: [{ emoji: "🍜", label: "edit me", note: "from the admin panel" }] },
-          guestbook: [], stickers: [], recent: [], stuffIMade: [], comments: [],
+          guestbook: [], stickers: [], recent: [], stuffIMade: [], comments: [], portfolio: [], guitarCovers: [],
           stickyNote: { enabled: false, text: "edit this note from the admin panel" },
           marqueeText: "touch grass • eat grass • git gud",
           footer: { headline: "see ya", sub: "", bottom: "", transFlairText: "TRANS PEOPLE CAN DOUBLE JUMP", showTransFlair: true },
