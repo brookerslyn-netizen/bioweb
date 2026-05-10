@@ -152,9 +152,9 @@ export const BUILTIN_PALETTES: Palette[] = [
       "--p-cursor": "#a83232",
       "--p-cursor-glow": "rgba(168, 50, 50, 0.5)",
       "--p-veil":
-        "radial-gradient(1200px 700px at 50% 18%, rgba(255,245,210,0.55), rgba(232,214,168,0.35) 50%, rgba(212,184,128,0.3) 100%), linear-gradient(180deg, rgba(255,248,224,0.4) 0%, rgba(232,214,168,0.5) 100%)",
-      "--p-gif-opacity": "0.05",
-      "--p-gif-filter": "saturate(0.3) blur(3px) sepia(0.5)",
+        "linear-gradient(180deg, rgba(212,184,150,0.08) 0%, rgba(200,168,130,0.12) 100%)",
+      "--p-gif-opacity": "0.04",
+      "--p-gif-filter": "saturate(0.2) blur(4px) sepia(0.6)",
       "--p-gradient-text":
         "linear-gradient(90deg, #6b4423, #a83232, #3a2818, #a83232, #6b4423)",
       "--p-marquee-bg": "rgba(232, 214, 168, 0.6)",

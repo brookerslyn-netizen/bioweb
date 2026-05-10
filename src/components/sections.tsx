@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, Eye, MessageSquare, Sparkles, Star, Calendar, Award } from "lucide-react";
 import type { AppConfig, FavoritesItem } from "../lib/config";
 import { splitLines, splitTags } from "../lib/config";
-import { Reveal, RansomNote, Typewriter, LiveClock, Doodle, useViewCount } from "./parts";
+import { Reveal, RansomNote, Typewriter, LiveClock, useViewCount } from "./parts";
 import { DiscordCard, EmailCard, SpotifyNowPlaying, SteamCard, MusicPlayer } from "./widgets";
 import { useLanyard } from "./parts";
 
@@ -12,12 +12,6 @@ export function HeroSection({ config, onNameClick }: { config: AppConfig; onName
   const lines = splitLines(config.hero.typingLinesText);
   return (
     <section id="hero" className="relative pt-12 md:pt-20 pb-16 md:pb-24 px-6 text-center">
-      <Doodle kind="star" top="22%" left="6%" size={32} rotate={-15} />
-
-      {/* decorative tape strips */}
-      <div className="absolute top-4 left-[15%] washi washi-peach hidden md:block" style={{ width: 60, height: 16, transform: "rotate(-12deg)" }} />
-      <div className="absolute top-8 right-[12%] washi washi-lavender hidden md:block" style={{ width: 70, height: 16, transform: "rotate(8deg)" }} />
-
       <div className="text-[10px] uppercase tracking-[0.4em] font-mono palette-text-muted">
         {config.hero.handle}
       </div>
@@ -34,10 +28,9 @@ export function HeroSection({ config, onNameClick }: { config: AppConfig; onName
         {config.hero.subtitle}
       </p>
 
-      <div className="mt-6 inline-block rounded-2xl px-4 py-3 palette-surface relative">
+      <div className="mt-6 inline-block px-4 py-3 paper relative" style={{ transform: "rotate(-1deg)" }}>
         {lines.length > 0 && <Typewriter lines={lines} />}
-        {/* tiny tape on the typing box */}
-        <div className="absolute -top-2 left-4 washi washi-yellow" style={{ width: 40, height: 12, transform: "rotate(-3deg)" }} />
+        <div className="absolute -top-2 left-1/2 -translate-x-1/2 washi washi-yellow" style={{ width: 50, height: 12, transform: "rotate(-2deg)" }} />
       </div>
 
       <div className="mt-12 flex flex-col items-center gap-1 palette-text-muted">
@@ -79,15 +72,11 @@ export function MarqueeSection({ text }: { text: string }) {
 export function AboutSection({ config }: { config: AppConfig }) {
   const tags = splitTags(config.about.tagsText);
   return (
-    <section id="about" className="px-6 py-12 max-w-5xl mx-auto">
+    <section id="about" className="px-6 py-8 max-w-5xl mx-auto -mt-4">
       <Reveal>
-        <div className="paper p-6 md:p-8 relative tilt-n1" style={{ minHeight: 200 }}>
-          <div className="washi washi-pink" style={{ top: -10, left: 40, transform: "rotate(-6deg)" }} />
-          <div className="washi washi-mint" style={{ top: -10, right: 40, transform: "rotate(7deg)" }} />
-          <div className="washi washi-peach" style={{ bottom: -8, left: 100, transform: "rotate(4deg)" }} />
-
-          {/* notebook holes on left edge */}
-          <div className="notebook-holes hidden md:block" />
+        <div className="paper p-6 md:p-8 relative" style={{ transform: "rotate(-0.8deg)" }}>
+          <div className="washi washi-pink" style={{ top: -8, left: 30, transform: "rotate(-5deg)" }} />
+          <div className="washi washi-mint" style={{ top: -8, right: 30, transform: "rotate(6deg)" }} />
 
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono paper-text-muted">
             <span style={{ color: "var(--p-accent)" }}>●</span> who am i
@@ -141,11 +130,10 @@ export function NowSection({ config }: { config: AppConfig }) {
   const lines = splitLines(config.nowListText);
   if (!lines.length) return null;
   return (
-    <section id="now" className="px-6 py-8 max-w-4xl mx-auto">
+    <section id="now" className="px-6 py-4 max-w-4xl mx-auto md:ml-auto md:mr-[8%] -mt-6">
       <Reveal>
-        <div className="paper paper-2 p-6 relative tilt-1">
-          <div className="washi washi-yellow" style={{ top: -10, right: 30, transform: "rotate(-4deg)" }} />
-          <div className="washi washi-lavender" style={{ bottom: -8, left: 50, transform: "rotate(6deg)" }} />
+        <div className="paper paper-2 p-6 relative" style={{ transform: "rotate(0.6deg)" }}>
+          <div className="washi washi-yellow" style={{ top: -8, right: 20, transform: "rotate(-3deg)" }} />
           <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
             ▸ now
           </div>
@@ -207,10 +195,10 @@ export function LastFmSection({ config }: { config: AppConfig }) {
 export function RecentSection({ config }: { config: AppConfig }) {
   if (config.recent.length === 0) return null;
   return (
-    <section id="recent" className="px-6 py-8 max-w-4xl mx-auto">
+    <section id="recent" className="px-6 py-4 max-w-4xl mx-auto md:ml-[6%] -mt-2">
       <Reveal>
-        <div className="paper p-6 tilt-n1 relative">
-          <div className="washi washi-mint" style={{ top: -10, left: 30, transform: "rotate(-3deg)" }} />
+        <div className="paper p-6 relative" style={{ transform: "rotate(-0.5deg)" }}>
+          <div className="washi washi-mint" style={{ top: -8, left: 20, transform: "rotate(-3deg)" }} />
           <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>recent things</h2>
           <ul className="mt-3 space-y-2 text-lg paper-text" style={{ fontFamily: "'Indie Flower', cursive" }}>
             {config.recent.map((r) => (
@@ -250,11 +238,10 @@ export function FavoritesSection({ config }: { config: AppConfig }) {
   const [active, setActive] = useState<keyof AppConfig["favorites"]>("games");
   const items: FavoritesItem[] = config.favorites[active] ?? [];
   return (
-    <section id="favorites" className="px-6 py-8 max-w-5xl mx-auto">
+    <section id="favorites" className="px-6 py-4 max-w-5xl mx-auto -mt-4">
       <Reveal>
-        <div className="paper paper-2 p-6 relative tilt-1">
-          <div className="washi washi-pink" style={{ top: -10, right: 50, transform: "rotate(4deg)" }} />
-          <div className="washi washi-peach" style={{ top: -10, left: 80, transform: "rotate(-3deg)" }} />
+        <div className="paper paper-2 p-6 relative" style={{ transform: "rotate(0.5deg)" }}>
+          <div className="washi washi-peach" style={{ top: -8, left: 60, transform: "rotate(-3deg)" }} />
           <div className="flex items-baseline justify-between flex-wrap gap-2">
             <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
               favorites <Star size={22} className="inline" />
@@ -320,10 +307,10 @@ export function FavoritesSection({ config }: { config: AppConfig }) {
 export function GuestbookSection({ config }: { config: AppConfig }) {
   if (config.guestbook.length === 0) return null;
   return (
-    <section id="guestbook" className="px-6 py-8 max-w-4xl mx-auto">
+    <section id="guestbook" className="px-6 py-4 max-w-4xl mx-auto -mt-2">
       <Reveal>
-        <div className="paper p-6 tilt-n1 relative">
-          <div className="washi washi-yellow" style={{ top: -10, left: 50, transform: "rotate(-5deg)" }} />
+        <div className="paper p-6 relative" style={{ transform: "rotate(-0.4deg)" }}>
+          <div className="washi washi-yellow" style={{ top: -8, left: 40, transform: "rotate(-4deg)" }} />
           <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
             shoutouts <MessageSquare size={20} className="inline" />
           </h2>
@@ -355,10 +342,10 @@ export function GuestbookSection({ config }: { config: AppConfig }) {
 export function StickersSection({ config }: { config: AppConfig }) {
   if (config.stickers.length === 0) return null;
   return (
-    <section id="stickers" className="px-6 py-8 max-w-5xl mx-auto">
+    <section id="stickers" className="px-6 py-4 max-w-5xl mx-auto md:mr-auto md:ml-[5%] -mt-3">
       <Reveal>
-        <div className="paper p-6 relative tilt-1">
-          <div className="washi washi-mint" style={{ top: -10, right: 70, transform: "rotate(6deg)" }} />
+        <div className="paper p-6 relative" style={{ transform: "rotate(0.7deg)" }}>
+          <div className="washi washi-mint" style={{ top: -8, right: 50, transform: "rotate(5deg)" }} />
           <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
             sticker wall <Sparkles size={22} className="inline" />
           </h2>
@@ -413,7 +400,7 @@ export function SteamSection({ config }: { config: AppConfig }) {
 
 export function StuffIMadeSection({ config }: { config: AppConfig }) {
   return (
-    <section id="stuffIMade" className="px-6 py-8 max-w-5xl mx-auto">
+    <section id="stuffIMade" className="px-6 py-4 max-w-5xl mx-auto -mt-2">
       <Reveal>
         <h2 className="palette-text mb-3" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
           stuff i made <Award size={22} className="inline" />
@@ -455,7 +442,7 @@ export function StuffIMadeSection({ config }: { config: AppConfig }) {
 export function FooterSection({ config }: { config: AppConfig }) {
   const visits = useViewCount();
   return (
-    <footer id="footer" className="relative mt-12 pt-12 pb-8 px-6 text-center">
+    <footer id="footer" className="relative mt-8 pt-12 pb-8 px-6 text-center">
       {/* torn top edge for footer */}
       <div className="absolute top-0 left-0 right-0 h-4 paper-torn-top" style={{ background: "var(--p-bg)" }} />
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ExternalLink, Guitar, Folder } from "lucide-react";
-import { Reveal, Doodle } from "./parts";
+import { Reveal } from "./parts";
 import type { PortfolioProject, GuitarCover } from "../lib/config";
 
 /* ── YouTube embed ── */
@@ -118,8 +118,6 @@ export function PortfolioPage({
       {/* header */}
       <Reveal>
         <div className="mb-8 text-center relative">
-          <Doodle kind="star" top="-10%" left="5%" size={40} rotate={-15} />
-          <Doodle kind="swirl" top="20%" left="88%" size={50} rotate={20} />
           <h1 className="palette-text palette-text-shadow" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 56 }}>
             portfolio
           </h1>

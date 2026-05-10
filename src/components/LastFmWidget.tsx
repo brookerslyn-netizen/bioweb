@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Music2, ExternalLink, BarChart2 } from "lucide-react";
-import { Reveal, Doodle } from "./parts";
+import { Reveal } from "./parts";
 
 interface LastFmTrack {
   name: string;
@@ -229,7 +229,6 @@ export function LastFmWidget({ username }: { username: string }) {
             </>
           )}
 
-          <Doodle kind="heart" top="88%" left="90%" size={16} rotate={12} />
         </div>
       </Reveal>
     </section>

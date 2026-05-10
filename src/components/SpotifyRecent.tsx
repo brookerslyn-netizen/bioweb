@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Music, Clock, Play, Pause, Loader2 } from "lucide-react";
-import { Reveal, Doodle } from "./parts";
+import { Reveal } from "./parts";
 
 interface Track {
   id: string;
@@ -143,8 +143,6 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
               <p className="mb-2">Spotify not connected</p>
               <p className="text-sm">Connect Spotify in admin panel to see recent tracks</p>
             </div>
-            <Doodle kind="heart" top="15%" left="85%" size={16} rotate={10} />
-            <Doodle kind="arrow" top="80%" left="5%" size={14} rotate={-20} />
           </div>
         </Reveal>
       </section>
@@ -233,8 +231,6 @@ export function SpotifyRecent({ apiBase }: SpotifyRecentProps) {
             </div>
           )}
 
-          <Doodle kind="heart" top="10%" left="90%" size={18} rotate={15} />
-          <Doodle kind="arrow" top="85%" left="8%" size={16} rotate={-25} />
         </div>
       </Reveal>
     </section>

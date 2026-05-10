@@ -262,10 +262,10 @@ function App() {
   }
 
   return (
-    <div className="relative">
-      {/* background gif */}
+    <div className="relative kraft-bg min-h-screen">
+      {/* background gif (behind kraft) */}
       <div className="bg-gif" style={{ backgroundImage: `url(${bgUrl})` }} />
-      {/* veil */}
+      {/* veil (subtle over kraft) */}
       <div className="fixed inset-0 -z-[1] palette-veil pointer-events-none" />
       {/* paper grain */}
       {config?.features.paperGrain && <div className="grain" />}
