@@ -60,8 +60,52 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   pointer-events: none;
   z-index: 20;
   background: var(--paper-cream);
-  transition: transform 600ms cubic-bezier(0.55, 0, 0.45, 1),
-              opacity 600ms ease;
+  overflow: hidden;
+  transition: transform 850ms cubic-bezier(0.22, 0.8, 0.36, 1),
+              opacity 850ms ease;
+}
+
+/* paper grain fibers — sits inside each torn half */
+.splash-rip-top .paper-grain,
+.splash-rip-bottom .paper-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.36  0 0 0 0 0.26  0 0 0 0 0.14  0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    repeating-linear-gradient(7deg, rgba(139,90,43,0.035) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(-5deg, rgba(139,90,43,0.03) 0 1px, transparent 1px 13px);
+  background-size: 300px 300px, auto, auto;
+}
+
+/* the dark jagged tear-line — only visible while the SFX plays */
+.tear-edge {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35));
+}
+.tear-edge.is-visible { opacity: 1; }
+
+/* top half's inner edge line — sits flush with the jagged bottom */
+.tear-edge-top {
+  bottom: -1px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='14' preserveAspectRatio='none'><path fill='none' stroke='rgba(40,26,14,0.85)' stroke-width='2.2' stroke-linejoin='round' d='M0 6 L40 4 L70 10 L110 5 L150 11 L190 4 L230 9 L270 3 L310 10 L350 5 L390 11 L430 4 L470 9 L510 3 L550 10 L590 5 L630 11 L670 4 L710 9 L750 3 L790 10 L830 5 L870 11 L910 4 L950 9 L1000 6'/></svg>");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+/* bottom half's inner edge line — slight vertical offset so both lines together read as a real seam */
+.tear-edge-bottom {
+  top: -1px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='14' preserveAspectRatio='none'><path fill='none' stroke='rgba(40,26,14,0.7)' stroke-width='1.6' stroke-linejoin='round' d='M0 8 L40 6 L70 12 L110 7 L150 13 L190 6 L230 11 L270 5 L310 12 L350 7 L390 13 L430 6 L470 11 L510 5 L550 12 L590 7 L630 13 L670 6 L710 11 L750 5 L790 12 L830 7 L870 13 L910 6 L950 11 L1000 8'/></svg>");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 
 .splash-rip-top {
@@ -69,7 +113,10 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   height: 55%;
   transform-origin: top center;
   transform: translateY(0) rotate(0deg);
-  /* jagged bottom edge */
+}
+
+/* jagged bottom edge only appears once the tear starts */
+.splash-rip-top.is-tearing {
   -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 0 L1000 0 L1000 340 C980 355, 960 330, 940 348 C920 365, 900 338, 880 352 C860 366, 840 335, 820 350 C800 365, 780 340, 760 355 C740 370, 720 342, 700 358 C680 374, 660 345, 640 360 C620 375, 600 348, 580 362 C560 376, 540 350, 520 365 C500 380, 480 352, 460 368 C440 384, 420 355, 400 370 C380 385, 360 358, 340 372 C320 386, 300 360, 280 374 C260 388, 240 362, 220 376 C200 390, 180 364, 160 378 C140 392, 120 366, 100 380 C80 394, 60 368, 40 382 C20 396, 10 372, 0 378 Z'/></svg>");
   mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 0 L1000 0 L1000 340 C980 355, 960 330, 940 348 C920 365, 900 338, 880 352 C860 366, 840 335, 820 350 C800 365, 780 340, 760 355 C740 370, 720 342, 700 358 C680 374, 660 345, 640 360 C620 375, 600 348, 580 362 C560 376, 540 350, 520 365 C500 380, 480 352, 460 368 C440 384, 420 355, 400 370 C380 385, 360 358, 340 372 C320 386, 300 360, 280 374 C260 388, 240 362, 220 376 C200 390, 180 364, 160 378 C140 392, 120 366, 100 380 C80 394, 60 368, 40 382 C20 396, 10 372, 0 378 Z'/></svg>");
   -webkit-mask-size: 100% 100%;
@@ -81,20 +128,23 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   height: 55%;
   transform-origin: bottom center;
   transform: translateY(0) rotate(0deg);
-  /* jagged top edge */
+}
+
+.splash-rip-bottom.is-tearing {
   -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 60 C20 44, 40 68, 60 52 C80 36, 100 58, 120 44 C140 30, 160 54, 180 40 C200 26, 220 50, 240 36 C260 22, 280 46, 300 32 C320 18, 340 42, 360 28 C380 14, 400 38, 420 24 C440 10, 460 34, 480 20 C500 6, 520 30, 540 16 C560 2, 580 26, 600 12 C620 -2, 640 22, 660 8 C680 -6, 700 18, 720 4 C740 -10, 760 14, 780 0 C800 -14, 820 10, 840 -4 C860 -18, 880 6, 900 -8 C920 -22, 940 2, 960 -12 C980 -26, 990 -4, 1000 -10 L1000 400 L0 400 Z'/></svg>");
   mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 60 C20 44, 40 68, 60 52 C80 36, 100 58, 120 44 C140 30, 160 54, 180 40 C200 26, 220 50, 240 36 C260 22, 280 46, 300 32 C320 18, 340 42, 360 28 C380 14, 400 38, 420 24 C440 10, 460 34, 480 20 C500 6, 520 30, 540 16 C560 2, 580 26, 600 12 C620 -2, 640 22, 660 8 C680 -6, 700 18, 720 4 C740 -10, 760 14, 780 0 C800 -14, 820 10, 840 -4 C860 -18, 880 6, 900 -8 C920 -22, 940 2, 960 -12 C980 -26, 990 -4, 1000 -10 L1000 400 L0 400 Z'/></svg>");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
 
-/* rip out animations */
+/* rip out animations — top is ripped from the top edge and dragged down;
+   bottom just falls straight down */
 .splash-rip-top-out {
-  transform: translateY(-110%) rotate(-4deg);
+  transform: translate(8vw, 120%) rotate(10deg);
   opacity: 0;
 }
 .splash-rip-bottom-out {
-  transform: translateY(110%) rotate(4deg);
+  transform: translateY(120%) rotate(-3deg);
   opacity: 0;
 }
 

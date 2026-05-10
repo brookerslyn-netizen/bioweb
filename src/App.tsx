@@ -154,7 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    setTimeout(() => setEntered(true), 650);
+    // matches the .splash-rip-* fall animation duration in App.css
+    setTimeout(() => setEntered(true), 900);
   }, []);
 
   function logout() {

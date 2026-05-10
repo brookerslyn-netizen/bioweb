@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import tearMp3 from "../assets/tear.mp3";
 
 /* ===================== Reveal on scroll ===================== */
 
@@ -186,18 +187,70 @@ export function Splash({ onEnter, leaving, name, splashText }: {
   name: string;
   splashText: string;
 }) {
+  const [tearing, setTearing] = useState(false);
+  const [seamFading, setSeamFading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const triggeredRef = useRef(false);
+
+  const handleClick = useCallback(() => {
+    if (triggeredRef.current) return;
+    triggeredRef.current = true;
+
+    // Start the rip sound and sync the visible seam to its duration
+    const audio = new Audio(tearMp3);
+    audio.volume = 0.9;
+    audioRef.current = audio;
+    const play = audio.play();
+    if (play && typeof play.catch === "function") play.catch(() => { /* autoplay block - seam still syncs via fallback */ });
+
+    // Show seam + jagged edge for the length of the SFX
+    setTearing(true);
+
+    const onEnded = () => {
+      setSeamFading(true);
+      // trigger the actual fall slightly before the seam fully fades
+      onEnter();
+    };
+    audio.addEventListener("ended", onEnded);
+
+    // Fallback in case audio fails / blocked: use fixed 1.1s rip window
+    const fallback = setTimeout(() => {
+      if (!audio.ended) {
+        setSeamFading(true);
+        onEnter();
+      }
+    }, 1100);
+
+    audio.addEventListener("ended", () => clearTimeout(fallback), { once: true });
+  }, [onEnter]);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
+  const seamVisible = tearing && !seamFading;
+
   return (
     <div
-      onClick={onEnter}
+      onClick={handleClick}
       className="fixed inset-0 z-50 cursor-pointer flex flex-col items-center justify-center text-center px-6"
     >
       <div className="absolute inset-0 -z-10 palette-veil" />
       <div className="absolute inset-0 -z-20 palette-bg" />
 
-      {/* top half rips upward */}
-      <div className={`splash-rip-top ${leaving ? "splash-rip-top-out" : ""}`} />
-      {/* bottom half rips downward */}
-      <div className={`splash-rip-bottom ${leaving ? "splash-rip-bottom-out" : ""}`} />
+      {/* top half — drops down like it was ripped from the top and dragged */}
+      <div className={`splash-rip-top ${tearing ? "is-tearing" : ""} ${leaving ? "splash-rip-top-out" : ""}`}>
+        <div className="paper-grain" />
+        <div className={`tear-edge tear-edge-top ${seamVisible ? "is-visible" : ""}`} />
+      </div>
+      {/* bottom half — just falls */}
+      <div className={`splash-rip-bottom ${tearing ? "is-tearing" : ""} ${leaving ? "splash-rip-bottom-out" : ""}`}>
+        <div className="paper-grain" />
+        <div className={`tear-edge tear-edge-bottom ${seamVisible ? "is-visible" : ""}`} />
+      </div>
 
       {/* scattered washi tape on splash */}
       <div className="absolute top-[15%] left-[10%] washi washi-pink" style={{ width: 80, height: 18, transform: "rotate(-18deg)", opacity: 0.5 }} />
