@@ -5,16 +5,23 @@ import type { CommentEntry } from "../lib/config";
 const API_BASE = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? "/api" : "http://localhost:3001/api");
 
-/* stable layout per comment */
+/* stable layout per comment — slot 0 is reserved for the compose card */
 const WASHI_VARIANTS = ["washi-pink", "washi-mint", "washi-yellow", "washi-lavender", "washi-peach"] as const;
+
+const COLS = 3;
+const CELL_W = 340;
+const CELL_H = 280;
+const BOARD_PAD = 60;
 
 function noteStyle(id: string, index: number) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  const col = index % 3;
-  const row = Math.floor(index / 3);
-  const x = 60 + col * 340 + ((h % 60) - 30);
-  const y = 60 + row * 280 + (((h >> 4) % 50) - 25);
+  // offset by 1 so the compose card (slot 0) is never overlapped by a comment
+  const slot = index + 1;
+  const col = slot % COLS;
+  const row = Math.floor(slot / COLS);
+  const x = BOARD_PAD + col * CELL_W + ((h % 60) - 30);
+  const y = BOARD_PAD + row * CELL_H + (((h >> 4) % 50) - 25);
   const rot = ((h % 14) - 7);
   const colors = [
     "#fff9c4", "#fce4ec", "#e8f5e9", "#e3f2fd", "#fff3e0", "#f3e5f5", "#fafaf2", "#fff8a8",
@@ -48,6 +55,7 @@ export function CommentsSection({
     catch { return new Set(); }
   });
   const [localHearts, setLocalHearts] = useState<Record<string, number>>({});
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   // panning
   const boardRef = useRef<HTMLDivElement>(null);
@@ -132,9 +140,10 @@ export function CommentsSection({
     });
   }, [comments, isAdmin]);
 
-  const cols = Math.max(3, Math.ceil(Math.sqrt(visibleComments.length + 1)));
-  const boardW = cols * 340 + 120;
-  const boardH = Math.ceil((visibleComments.length + 1) / cols) * 280 + 120;
+  const boardW = COLS * CELL_W + BOARD_PAD * 2;
+  // +1 slot for compose, extra row of padding so the last note's tape/shadow has room
+  const totalSlots = visibleComments.length + 1;
+  const boardH = Math.ceil(totalSlots / COLS) * CELL_H + BOARD_PAD * 2;
 
   return (
     <div className="fixed inset-0 z-10 flex flex-col palette-bg">
@@ -282,13 +291,19 @@ export function CommentsSection({
             const hearted = heartedIds.has(comment.id);
 
             return (
-              <div key={comment.id} className="absolute group" style={{
-                left: x, top: y, width: 220,
-                transform: `rotate(${rot}deg)`,
-                zIndex: comment.pinned ? 4 : (comment.hidden ? 0 : 1),
-                opacity: comment.hidden ? 0.45 : 1,
-                transition: "transform 200ms ease, z-index 0ms, opacity 200ms",
-              }}>
+              <div
+                key={comment.id}
+                className="absolute group"
+                onMouseEnter={() => setHoveredId(comment.id)}
+                onMouseLeave={() => setHoveredId((cur) => (cur === comment.id ? null : cur))}
+                style={{
+                  left: x, top: y, width: 220,
+                  transform: `rotate(${rot}deg)`,
+                  zIndex: hoveredId === comment.id ? 50 : (comment.pinned ? 4 : (comment.hidden ? 0 : 1)),
+                  opacity: comment.hidden ? 0.45 : 1,
+                  transition: "transform 200ms ease, opacity 200ms",
+                }}
+              >
                 {/* pinned indicator */}
                 {comment.pinned && (
                   <div className="absolute -top-3 -right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center palette-accent-bg shadow-md" title="pinned">
