@@ -29,7 +29,7 @@ export function PencilCursor({ enabled }: { enabled: boolean }) {
     const el = ref.current;
     if (!el) return;
     const onMove = (e: MouseEvent) => {
-      el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-3px, -28px)`;
+      el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-4px, -4px)`;
     };
     const onOver = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
@@ -48,20 +48,22 @@ export function PencilCursor({ enabled }: { enabled: boolean }) {
   if (!enabled) return null;
   return (
     <div ref={ref} className="cursor-pencil hidden md:block">
-      {/* fountain pen nib — tip points down-left at the hotspot */}
-      <svg viewBox="0 0 32 40" width="28" height="35" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.45))" }}>
-        {/* barrel */}
-        <rect x="11" y="2" width="10" height="18" rx="5" fill="var(--p-accent)" stroke="#1a1a1a" strokeWidth="0.8" />
-        {/* clip */}
-        <rect x="19.5" y="3" width="2" height="16" rx="1" fill="#1a1a1a" opacity="0.5" />
-        {/* grip section */}
-        <rect x="10" y="18" width="12" height="7" rx="2" fill="#1a1a1a" opacity="0.75" />
-        {/* nib body */}
-        <path d="M13 25 L16 38 L19 25 Z" fill="#d4af37" stroke="#8a6a00" strokeWidth="0.6" />
-        {/* nib slit */}
-        <line x1="16" y1="27" x2="16" y2="37" stroke="#8a6a00" strokeWidth="0.7" opacity="0.8" />
-        {/* ink drop at tip */}
-        <circle cx="16" cy="38" r="1.2" fill="var(--p-accent)" opacity="0.9" />
+      {/* craft scissors cursor — tip at top-left */}
+      <svg viewBox="0 0 32 32" width="32" height="32" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.35))" }}>
+        {/* blade 1 */}
+        <path d="M4 4 L18 16 L16 18 L2 6 Z" fill="#c0c0c0" stroke="#666" strokeWidth="0.5" />
+        {/* blade 2 */}
+        <path d="M4 4 L16 18 L18 16 Z" fill="#d8d8d8" stroke="#666" strokeWidth="0.5" opacity="0" />
+        <path d="M6 2 L18 16 L20 14 L8 0 Z" fill="#b0b0b0" stroke="#666" strokeWidth="0.5" />
+        {/* pivot screw */}
+        <circle cx="17" cy="17" r="2.5" fill="var(--p-accent)" stroke="#333" strokeWidth="0.5" />
+        <circle cx="17" cy="17" r="0.8" fill="#333" />
+        {/* handle 1 */}
+        <ellipse cx="24" cy="22" rx="5" ry="3.5" fill="var(--p-accent)" stroke="#333" strokeWidth="0.6" transform="rotate(-30 24 22)" />
+        <ellipse cx="24" cy="22" rx="3" ry="1.8" fill="var(--p-bg)" transform="rotate(-30 24 22)" />
+        {/* handle 2 */}
+        <ellipse cx="20" cy="26" rx="5" ry="3.5" fill="var(--p-accent)" stroke="#333" strokeWidth="0.6" transform="rotate(20 20 26)" />
+        <ellipse cx="20" cy="26" rx="3" ry="1.8" fill="var(--p-bg)" transform="rotate(20 20 26)" />
       </svg>
     </div>
   );
@@ -197,6 +199,12 @@ export function Splash({ onEnter, leaving, name, splashText }: {
       {/* bottom half rips downward */}
       <div className={`splash-rip-bottom ${leaving ? "splash-rip-bottom-out" : ""}`} />
 
+      {/* scattered washi tape on splash */}
+      <div className="absolute top-[15%] left-[10%] washi washi-pink" style={{ width: 80, height: 18, transform: "rotate(-18deg)", opacity: 0.5 }} />
+      <div className="absolute top-[20%] right-[12%] washi washi-mint" style={{ width: 70, height: 18, transform: "rotate(12deg)", opacity: 0.4 }} />
+      <div className="absolute bottom-[25%] left-[18%] washi washi-yellow" style={{ width: 90, height: 18, transform: "rotate(6deg)", opacity: 0.45 }} />
+      <div className="absolute bottom-[18%] right-[15%] washi washi-lavender" style={{ width: 65, height: 18, transform: "rotate(-10deg)", opacity: 0.35 }} />
+
       <div className={`splash-content ${leaving ? "splash-content-out" : ""}`}>
         <RansomNote
           name={name}
@@ -207,9 +215,11 @@ export function Splash({ onEnter, leaving, name, splashText }: {
         <p className="mt-6 text-2xl md:text-3xl palette-text-soft" style={{ fontFamily: "'Indie Flower', cursive" }}>
           {splashText}
         </p>
-        <p className="mt-3 text-xs uppercase tracking-[0.3em] font-mono palette-text-muted animate-pulse">
-          [ click to enter ]
-        </p>
+        <div className="mt-6 inline-block">
+          <p className="text-xs uppercase tracking-[0.3em] font-mono palette-text-muted animate-pulse">
+            ✂️ tear to enter
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -311,9 +321,183 @@ export function LiveClock({ tz }: { tz: string }) {
   );
 }
 
+/* ===================== Scattered Polaroid Decorations ===================== */
+
+export function ScatteredPolaroids() {
+  const polaroids = useMemo(() => [
+    { top: "8%", left: "82%", rotate: 12, w: 70, h: 70, color: "#e8d4b8" },
+    { top: "25%", left: "88%", rotate: -8, w: 60, h: 75, color: "#d4c4a8" },
+    { top: "45%", left: "3%", rotate: -15, w: 65, h: 65, color: "#f0e6d2" },
+    { top: "62%", left: "90%", rotate: 6, w: 55, h: 70, color: "#e0d0b8" },
+    { top: "78%", left: "5%", rotate: 18, w: 75, h: 60, color: "#dcc8a8" },
+    { top: "38%", left: "92%", rotate: -22, w: 50, h: 65, color: "#f5e8d0" },
+  ], []);
+
+  return (
+    <>
+      {polaroids.map((p, i) => (
+        <div
+          key={i}
+          className="scattered-polaroid hidden lg:block"
+          style={{
+            top: p.top,
+            left: p.left,
+            transform: `rotate(${p.rotate}deg)`,
+          }}
+        >
+          <div style={{
+            background: "#fafaf2",
+            padding: "4px 4px 16px 4px",
+            borderRadius: "1px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}>
+            <div style={{
+              width: p.w,
+              height: p.h,
+              background: p.color,
+              backgroundImage: `radial-gradient(circle at ${30 + i * 10}% ${20 + i * 8}%, rgba(255,255,255,0.3), transparent 60%)`,
+            }} />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/* ===================== Falling Paper Scraps ===================== */
+
+export function FallingPaperScraps() {
+  const scraps = useMemo(() => {
+    const colors = ["#f5e8c8", "#fce4ec", "#e8f5e9", "#fff8a8", "#f5a9b8", "#a7f3d0", "#fde68a", "#ddd6fe"];
+    return Array.from({ length: 12 }, (_, i) => ({
+      left: `${5 + (i * 8) % 90}%`,
+      size: 6 + (i % 4) * 3,
+      duration: 18 + (i % 5) * 6,
+      delay: i * 3.2,
+      color: colors[i % colors.length],
+      rotate: (i * 47) % 360,
+    }));
+  }, []);
+
+  return (
+    <>
+      {scraps.map((s, i) => (
+        <div
+          key={i}
+          className="paper-scrap"
+          style={{
+            left: s.left,
+            width: s.size,
+            height: s.size * 1.3,
+            background: s.color,
+            animationDuration: `${s.duration}s`,
+            animationDelay: `${s.delay}s`,
+            borderRadius: "1px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+/* ===================== Decorative Stamps ===================== */
+
+export function ScrapbookStamp({ top, left, rotate = 0, kind = "postage" }: {
+  top: string;
+  left: string;
+  rotate?: number;
+  kind?: "postage" | "circle" | "airmail";
+}) {
+  if (kind === "circle") {
+    return (
+      <div className="stamp hidden md:block" style={{ top, left, transform: `rotate(${rotate}deg)` }}>
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <circle cx="25" cy="25" r="22" fill="none" stroke="var(--p-accent)" strokeWidth="2" strokeDasharray="3 2" />
+          <circle cx="25" cy="25" r="18" fill="none" stroke="var(--p-accent)" strokeWidth="0.5" />
+          <text x="25" y="22" textAnchor="middle" fontSize="5" fill="var(--p-accent)" fontFamily="monospace">BROOKERSLYN</text>
+          <text x="25" y="30" textAnchor="middle" fontSize="4" fill="var(--p-accent)" fontFamily="monospace">2025</text>
+        </svg>
+      </div>
+    );
+  }
+  if (kind === "airmail") {
+    return (
+      <div className="stamp hidden md:block" style={{ top, left, transform: `rotate(${rotate}deg)` }}>
+        <svg width="60" height="24" viewBox="0 0 60 24">
+          {/* red-blue airmail border */}
+          {Array.from({ length: 10 }, (_, i) => (
+            <rect key={i} x={i * 6} y="0" width="3" height="24" fill={i % 2 === 0 ? "#ef4444" : "#3b82f6"} opacity="0.6" />
+          ))}
+          <rect x="8" y="4" width="44" height="16" fill="#fafaf2" />
+          <text x="30" y="14" textAnchor="middle" fontSize="6" fill="#2b2316" fontFamily="monospace" fontWeight="bold">PAR AVION</text>
+        </svg>
+      </div>
+    );
+  }
+  return (
+    <div className="stamp hidden md:block" style={{ top, left, transform: `rotate(${rotate}deg)` }}>
+      <svg width="40" height="48" viewBox="0 0 40 48">
+        {/* perforated edge */}
+        <rect x="2" y="2" width="36" height="44" rx="1" fill="#fde68a" stroke="var(--p-accent)" strokeWidth="0.5" />
+        <rect x="4" y="4" width="32" height="28" rx="1" fill="var(--p-accent)" opacity="0.2" />
+        <text x="20" y="40" textAnchor="middle" fontSize="5" fill="#2b2316" fontFamily="monospace">$0.{(rotate + 50) % 99}</text>
+      </svg>
+    </div>
+  );
+}
+
+/* ===================== Binder Clip ===================== */
+
+export function BinderClip({ top, left, rotate = 0 }: { top: string; left: string; rotate?: number }) {
+  return (
+    <div className="binder-clip hidden md:block" style={{ top, left, transform: `rotate(${rotate}deg)` }}>
+      <svg width="24" height="32" viewBox="0 0 24 32" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))" }}>
+        {/* clip body */}
+        <rect x="4" y="8" width="16" height="12" rx="2" fill="#333" />
+        {/* metal handles */}
+        <path d="M7 8 L7 2 C7 0.5 9 0.5 9 2 L9 8" fill="none" stroke="#888" strokeWidth="1.5" />
+        <path d="M15 8 L15 2 C15 0.5 17 0.5 17 2 L17 8" fill="none" stroke="#888" strokeWidth="1.5" />
+        {/* grip part going down */}
+        <path d="M6 20 L4 28" stroke="#555" strokeWidth="1" strokeLinecap="round" />
+        <path d="M18 20 L20 28" stroke="#555" strokeWidth="1" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+}
+
+/* ===================== Coffee Stain ===================== */
+
+export function CoffeeStain({ top, left, size = 80 }: { top: string; left: string; size?: number }) {
+  return <div className="coffee-stain hidden md:block" style={{ top, left, width: size, height: size }} />;
+}
+
+/* ===================== Name Click Surprise ===================== */
+
+export function useNameSurprise() {
+  const [surpriseActive, setSurpriseActive] = useState(false);
+  const handleNameClick = useCallback(() => {
+    setSurpriseActive(true);
+    const letters = document.querySelectorAll(".ransom span");
+    letters.forEach((el, i) => {
+      const htmlEl = el as HTMLElement;
+      const origTransform = htmlEl.style.transform;
+      htmlEl.style.transition = "transform 400ms cubic-bezier(0.2,0.8,0.2,1)";
+      htmlEl.style.transform = `${origTransform} translateY(${-20 - Math.random() * 30}px) rotate(${(Math.random() - 0.5) * 40}deg) scale(1.2)`;
+      setTimeout(() => {
+        htmlEl.style.transform = origTransform;
+        if (i === letters.length - 1) {
+          setTimeout(() => setSurpriseActive(false), 400);
+        }
+      }, 600 + i * 80);
+    });
+  }, []);
+  return { surpriseActive, handleNameClick };
+}
+
 /* ===================== Doodles (scattered SVGs) ===================== */
 
-export function Doodle({ kind, top, left, size = 60, rotate = 0 }: { kind: "arrow" | "star" | "swirl" | "heart"; top: string; left: string; size?: number; rotate?: number }) {
+export function Doodle({ kind, top, left, size = 60, rotate = 0 }: { kind: "arrow" | "star" | "swirl" | "heart" | "flower" | "tape-x"; top: string; left: string; size?: number; rotate?: number }) {
   const d: Record<string, ReactNode> = {
     arrow: (
       <svg viewBox="0 0 100 60" width={size} height={size * 0.6} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -334,6 +518,20 @@ export function Doodle({ kind, top, left, size = 60, rotate = 0 }: { kind: "arro
     heart: (
       <svg viewBox="0 0 50 50" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <path d="M25 14 C 22 8, 12 8, 10 16 C 8 26, 25 40, 25 40 C 25 40, 42 26, 40 16 C 38 8, 28 8, 25 14 Z" />
+      </svg>
+    ),
+    flower: (
+      <svg viewBox="0 0 50 50" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+        <circle cx="25" cy="25" r="4" fill="currentColor" opacity="0.3" />
+        {[0, 60, 120, 180, 240, 300].map((a, i) => (
+          <ellipse key={i} cx="25" cy="14" rx="5" ry="9" fill="none" stroke="currentColor" transform={`rotate(${a} 25 25)`} />
+        ))}
+      </svg>
+    ),
+    "tape-x": (
+      <svg viewBox="0 0 50 50" width={size} height={size} fill="none" strokeLinecap="round">
+        <line x1="5" y1="5" x2="45" y2="45" stroke="rgba(253,224,71,0.5)" strokeWidth="8" />
+        <line x1="45" y1="5" x2="5" y2="45" stroke="rgba(253,224,71,0.5)" strokeWidth="8" />
       </svg>
     ),
   };

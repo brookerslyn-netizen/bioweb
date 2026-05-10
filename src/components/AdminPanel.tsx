@@ -771,3 +771,74 @@ function StuffEditor({ config, set }: { config: AppConfig; set: Setter }) {
     </>
   );
 }
+
+/* ===================== Portfolio editor ===================== */
+
+function PortfolioEditor({ config, set }: { config: AppConfig; set: Setter }) {
+  function update(i: number, patch: Partial<PortfolioProject>) {
+    pushHistory(config);
+    set((c) => ({ ...c, portfolio: c.portfolio.map((p, idx) => (idx === i ? { ...p, ...patch } : p)) }));
+  }
+  function add() {
+    pushHistory(config);
+    set((c) => ({ ...c, portfolio: [...c.portfolio, { id: uid(), title: "new project", blurb: "", tag: "web", emoji: "🚀" }] }));
+  }
+  function remove(i: number) {
+    pushHistory(config);
+    set((c) => ({ ...c, portfolio: c.portfolio.filter((_, idx) => idx !== i) }));
+  }
+  return (
+    <>
+      <H icon={<Award size={14} />}>portfolio</H>
+      <div className="space-y-1">
+        {config.portfolio.map((p, i) => (
+          <div key={p.id} className="palette-surface-strong rounded-lg p-2 space-y-1">
+            <div className="grid grid-cols-[40px_1fr_80px] gap-2 items-center">
+              <input className={inputCls} value={p.emoji} onChange={(e) => update(i, { emoji: e.target.value })} />
+              <input className={inputCls} value={p.title} onChange={(e) => update(i, { title: e.target.value })} placeholder="title" />
+              <input className={inputCls} value={p.tag} onChange={(e) => update(i, { tag: e.target.value })} placeholder="tag" />
+            </div>
+            <textarea className={textareaCls} rows={2} value={p.blurb} onChange={(e) => update(i, { blurb: e.target.value })} placeholder="blurb" />
+            <input className={inputCls} value={p.url || ""} onChange={(e) => update(i, { url: e.target.value })} placeholder="optional url" />
+            <input className={inputCls} value={p.imageUrl || ""} onChange={(e) => update(i, { imageUrl: e.target.value })} placeholder="optional image url" />
+            <button className={btnCls} onClick={() => remove(i)}><Trash2 size={12} /> delete</button>
+          </div>
+        ))}
+        <button className={btnCls} onClick={add}><Plus size={12} /> add project</button>
+      </div>
+    </>
+  );
+}
+
+/* ===================== Guitar covers editor ===================== */
+
+function CoversEditor({ config, set }: { config: AppConfig; set: Setter }) {
+  function update(i: number, patch: Partial<GuitarCover>) {
+    pushHistory(config);
+    set((c) => ({ ...c, guitarCovers: c.guitarCovers.map((p, idx) => (idx === i ? { ...p, ...patch } : p)) }));
+  }
+  function add() {
+    pushHistory(config);
+    set((c) => ({ ...c, guitarCovers: [...c.guitarCovers, { id: uid(), title: "new cover", youtubeId: "" }] }));
+  }
+  function remove(i: number) {
+    pushHistory(config);
+    set((c) => ({ ...c, guitarCovers: c.guitarCovers.filter((_, idx) => idx !== i) }));
+  }
+  return (
+    <>
+      <H icon={<MusicIcon size={14} />}>guitar covers</H>
+      <div className="space-y-1">
+        {config.guitarCovers.map((c, i) => (
+          <div key={c.id} className="palette-surface-strong rounded-lg p-2 space-y-1">
+            <input className={inputCls} value={c.title} onChange={(e) => update(i, { title: e.target.value })} placeholder="title" />
+            <input className={inputCls} value={c.youtubeId} onChange={(e) => update(i, { youtubeId: e.target.value })} placeholder="youtube video id" />
+            <input className={inputCls} value={c.note || ""} onChange={(e) => update(i, { note: e.target.value })} placeholder="optional note" />
+            <button className={btnCls} onClick={() => remove(i)}><Trash2 size={12} /> delete</button>
+          </div>
+        ))}
+        <button className={btnCls} onClick={add}><Plus size={12} /> add cover</button>
+      </div>
+    </>
+  );
+}

@@ -8,19 +8,24 @@ import { useLanyard } from "./parts";
 
 /* ===================== Hero ===================== */
 
-export function HeroSection({ config }: { config: AppConfig }) {
+export function HeroSection({ config, onNameClick }: { config: AppConfig; onNameClick?: () => void }) {
   const lines = splitLines(config.hero.typingLinesText);
   return (
     <section id="hero" className="relative pt-12 md:pt-20 pb-16 md:pb-24 px-6 text-center">
       <Doodle kind="star" top="22%" left="6%" size={40} rotate={-15} />
       <Doodle kind="swirl" top="68%" left="86%" size={56} rotate={20} />
       <Doodle kind="arrow" top="10%" left="78%" size={70} rotate={20} />
+      <Doodle kind="flower" top="75%" left="12%" size={35} rotate={30} />
+
+      {/* decorative tape strips */}
+      <div className="absolute top-4 left-[15%] washi washi-peach hidden md:block" style={{ width: 60, height: 16, transform: "rotate(-12deg)" }} />
+      <div className="absolute top-8 right-[12%] washi washi-lavender hidden md:block" style={{ width: 70, height: 16, transform: "rotate(8deg)" }} />
 
       <div className="text-[10px] uppercase tracking-[0.4em] font-mono palette-text-muted">
         {config.hero.handle}
       </div>
 
-      <div className="mt-6 mb-2 flex justify-center">
+      <div className="mt-6 mb-2 flex justify-center cursor-pointer" onClick={onNameClick} data-cursor="hover">
         <RansomNote
           name={config.hero.name}
           sizes={[88, 100, 76, 96, 84]}
@@ -32,8 +37,10 @@ export function HeroSection({ config }: { config: AppConfig }) {
         {config.hero.subtitle}
       </p>
 
-      <div className="mt-6 inline-block rounded-2xl px-4 py-3 palette-surface">
+      <div className="mt-6 inline-block rounded-2xl px-4 py-3 palette-surface relative">
         {lines.length > 0 && <Typewriter lines={lines} />}
+        {/* tiny tape on the typing box */}
+        <div className="absolute -top-2 left-4 washi washi-yellow" style={{ width: 40, height: 12, transform: "rotate(-3deg)" }} />
       </div>
 
       <div className="mt-12 flex flex-col items-center gap-1 palette-text-muted">
@@ -80,6 +87,10 @@ export function AboutSection({ config }: { config: AppConfig }) {
         <div className="paper p-6 md:p-8 relative tilt-n1" style={{ minHeight: 200 }}>
           <div className="washi washi-pink" style={{ top: -10, left: 40, transform: "rotate(-6deg)" }} />
           <div className="washi washi-mint" style={{ top: -10, right: 40, transform: "rotate(7deg)" }} />
+          <div className="washi washi-peach" style={{ bottom: -8, left: 100, transform: "rotate(4deg)" }} />
+
+          {/* notebook holes on left edge */}
+          <div className="notebook-holes hidden md:block" />
 
           <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono paper-text-muted">
             <span style={{ color: "var(--p-accent)" }}>●</span> who am i
@@ -137,6 +148,7 @@ export function NowSection({ config }: { config: AppConfig }) {
       <Reveal>
         <div className="paper paper-2 p-6 relative tilt-1">
           <div className="washi washi-yellow" style={{ top: -10, right: 30, transform: "rotate(-4deg)" }} />
+          <div className="washi washi-lavender" style={{ bottom: -8, left: 50, transform: "rotate(6deg)" }} />
           <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
             ▸ now
           </div>
@@ -245,6 +257,7 @@ export function FavoritesSection({ config }: { config: AppConfig }) {
       <Reveal>
         <div className="paper paper-2 p-6 relative tilt-1">
           <div className="washi washi-pink" style={{ top: -10, right: 50, transform: "rotate(4deg)" }} />
+          <div className="washi washi-peach" style={{ top: -10, left: 80, transform: "rotate(-3deg)" }} />
           <div className="flex items-baseline justify-between flex-wrap gap-2">
             <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
               favorites <Star size={22} className="inline" />
@@ -448,6 +461,10 @@ export function FooterSection({ config }: { config: AppConfig }) {
     <footer id="footer" className="relative mt-12 pt-12 pb-8 px-6 text-center">
       <Doodle kind="heart" top="20%" left="14%" size={36} rotate={-20} />
       <Doodle kind="swirl" top="36%" left="84%" size={48} rotate={10} />
+      <Doodle kind="flower" top="60%" left="8%" size={28} rotate={45} />
+
+      {/* torn top edge for footer */}
+      <div className="absolute top-0 left-0 right-0 h-4 paper-torn-top" style={{ background: "var(--p-bg)" }} />
 
       <h2 className="palette-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 60 }}>
         {config.footer.headline}
