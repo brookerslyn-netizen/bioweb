@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 const CONFIG_FILE = path.join(__dirname, 'config.json');
+const COMMENTS_FILE = path.join(__dirname, 'comments.json');
 
 // Spotify API Configuration
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
@@ -321,13 +322,51 @@ async function writeConfig(config) {
   return writeChain;
 }
 
+// === Comments storage (separate from config so uploads don't clobber them) ===
+let commentsWriteChain = Promise.resolve();
+
+async function readComments() {
+  try {
+    const data = await fs.readFile(COMMENTS_FILE, 'utf8');
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.error('readComments error:', error);
+    // First run: try to migrate from config.json
+    try {
+      const rawConfig = await fs.readFile(CONFIG_FILE, 'utf8');
+      const cfg = JSON.parse(rawConfig);
+      const migrated = Array.isArray(cfg.comments) ? cfg.comments : [];
+      await writeComments(migrated);
+      // leave config.comments in place; /api/config strips them on read
+      return migrated;
+    } catch {
+      await writeComments([]);
+      return [];
+    }
+  }
+}
+
+async function writeComments(comments) {
+  commentsWriteChain = commentsWriteChain.then(async () => {
+    const tmp = COMMENTS_FILE + '.tmp';
+    await fs.writeFile(tmp, JSON.stringify(comments, null, 2));
+    await fs.rename(tmp, COMMENTS_FILE);
+  }).catch((err) => {
+    console.error('writeComments error:', err);
+  });
+  return commentsWriteChain;
+}
+
 // API Routes
 
 // GET config - for all users
+// Always merges live comments from comments.json so the frontend can keep
+// using config.comments as the source of truth for rendering.
 app.get('/api/config', async (req, res) => {
   try {
-    const config = await readConfig();
-    res.json(config);
+    const [config, comments] = await Promise.all([readConfig(), readComments()]);
+    res.json({ ...config, comments });
   } catch (error) {
     console.error('Error reading config:', error);
     res.status(500).json({ error: 'Failed to read config' });
@@ -335,11 +374,15 @@ app.get('/api/config', async (req, res) => {
 });
 
 // POST config - for admin updates
+// NEVER overwrites comments. The comments array on the incoming body is stripped
+// so "upload config" in the admin panel can't clobber guestbook entries.
 app.post('/api/config', async (req, res) => {
   try {
-    const config = req.body;
-    await writeConfig(config);
-    res.json({ success: true, config });
+    const incoming = { ...(req.body || {}) };
+    delete incoming.comments; // keep comments immune from config uploads
+    await writeConfig(incoming);
+    const comments = await readComments();
+    res.json({ success: true, config: { ...incoming, comments } });
   } catch (error) {
     console.error('Error writing config:', error);
     res.status(500).json({ error: 'Failed to save config' });
@@ -367,7 +410,6 @@ app.post('/api/comments', async (req, res) => {
       return res.status(429).json({ error: `slow down — try again in ~${hoursLeft}h` });
     }
 
-    const config = await readConfig();
     const newComment = {
       id: Date.now().toString(),
       name: name.trim(),
@@ -375,8 +417,9 @@ app.post('/api/comments', async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    config.comments = [newComment, ...(config.comments || [])];
-    await writeConfig(config);
+    const comments = await readComments();
+    comments.unshift(newComment);
+    await writeComments(comments);
 
     commentIPLastPosted.set(clientIP, Date.now());
 
@@ -543,13 +586,13 @@ app.post('/api/comments/:id/heart', async (req, res) => {
       return res.status(429).json({ error: 'already hearted' });
     }
 
-    const config = await readConfig();
-    const idx = config.comments.findIndex(c => c.id === id);
+    const comments = await readComments();
+    const idx = comments.findIndex(c => c.id === id);
     if (idx === -1) return res.status(404).json({ error: 'Comment not found' });
-    config.comments[idx].hearts = (config.comments[idx].hearts || 0) + 1;
-    await writeConfig(config);
+    comments[idx].hearts = (comments[idx].hearts || 0) + 1;
+    await writeComments(comments);
     ipSet.add(id);
-    res.json({ success: true, hearts: config.comments[idx].hearts });
+    res.json({ success: true, hearts: comments[idx].hearts });
   } catch (error) {
     console.error('Error hearting comment:', error);
     res.status(500).json({ error: 'Failed to heart comment' });
@@ -581,13 +624,13 @@ app.get('/api/youtube/search', async (req, res) => {
 app.delete('/api/comments/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const config = await readConfig();
-    const before = config.comments?.length || 0;
-    config.comments = (config.comments || []).filter((c) => c.id !== id);
-    if (config.comments.length === before) {
+    const comments = await readComments();
+    const before = comments.length;
+    const next = comments.filter((c) => c.id !== id);
+    if (next.length === before) {
       return res.status(404).json({ error: 'not found' });
     }
-    await writeConfig(config);
+    await writeComments(next);
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting comment:', error);
@@ -600,13 +643,13 @@ app.patch('/api/comments/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { hidden, pinned } = req.body || {};
-    const config = await readConfig();
-    const idx = (config.comments || []).findIndex((c) => c.id === id);
+    const comments = await readComments();
+    const idx = comments.findIndex((c) => c.id === id);
     if (idx === -1) return res.status(404).json({ error: 'not found' });
-    if (typeof hidden === 'boolean') config.comments[idx].hidden = hidden;
-    if (typeof pinned === 'boolean') config.comments[idx].pinned = pinned;
-    await writeConfig(config);
-    res.json({ success: true, comment: config.comments[idx] });
+    if (typeof hidden === 'boolean') comments[idx].hidden = hidden;
+    if (typeof pinned === 'boolean') comments[idx].pinned = pinned;
+    await writeComments(comments);
+    res.json({ success: true, comment: comments[idx] });
   } catch (error) {
     console.error('Error patching comment:', error);
     res.status(500).json({ error: 'failed to patch' });

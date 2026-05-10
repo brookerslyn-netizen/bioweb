@@ -3,7 +3,7 @@ import { ChevronDown, Eye, MessageSquare, Sparkles, Star, Calendar, Award } from
 import type { AppConfig, FavoritesItem } from "../lib/config";
 import { splitLines, splitTags } from "../lib/config";
 import { Reveal, RansomNote, Typewriter, LiveClock, Doodle, useViewCount } from "./parts";
-import { DiscordCard, EmailCard, SteamCard, MusicPlayer } from "./widgets";
+import { DiscordCard, EmailCard, SteamCard } from "./widgets";
 import { SpotifyLastFm } from "./SpotifyLastFm";
 
 /* ===================== Hero ===================== */
@@ -175,15 +175,7 @@ export function ConnectionsSection({ config }: { config: AppConfig }) {
             <DiscordCard discordId={config.contact.discordId} showCopy={config.contact.showCopyDiscord} />
             {config.contact.showEmail && <EmailCard email={config.contact.email} />}
           </div>
-          {/* Row 2: Music Player */}
-          <MusicPlayer
-            playlist={config.music.playlist}
-            volume={config.music.volume}
-            autoplay={config.music.autoplay}
-            visual={config.music.visual}
-            crackle={config.music.crackle && config.features.transFlair}
-            enabled={config.music.enabled && config.features.music}
-          />
+          {/* Row 2: Music Player is rendered at app root so it persists across views */}
           {/* Row 3: Spotify */}
           {config.contact.lastfmUsername && (
             <SpotifyLastFm 

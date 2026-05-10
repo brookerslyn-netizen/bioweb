@@ -43,6 +43,7 @@ import { AdminPanel } from "./components/AdminPanel";
 import { NavigationTab, type View } from "./components/NavigationTab";
 import { CommentsSection } from "./components/CommentsSection";
 import { PortfolioPage } from "./components/PortfolioPage";
+import { MusicPlayer } from "./components/widgets";
 
 function App() {
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -330,6 +331,21 @@ function App() {
           />
         )}
       </main>
+
+      {/* Persistent music player — rendered once so playback survives view switches.
+          Floats above the main view at the bottom of the screen. */}
+      {entered && config && (config.music.enabled && config.features.music) && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[45] w-[min(92vw,640px)] pointer-events-auto">
+          <MusicPlayer
+            playlist={config.music.playlist}
+            volume={config.music.volume}
+            autoplay={config.music.autoplay}
+            visual={config.music.visual}
+            crackle={config.music.crackle && config.features.transFlair}
+            enabled={config.music.enabled && config.features.music}
+          />
+        </div>
+      )}
 
       {/* admin panel */}
       {isAdmin && config && (

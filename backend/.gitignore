@@ -2,3 +2,6 @@ node_modules
 config.json
 *.log
 .env
+comments.json
+comments.json.tmp
+config.json.tmp
