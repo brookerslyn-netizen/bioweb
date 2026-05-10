@@ -78,7 +78,7 @@ function App() {
         console.error('Failed to load config:', error);
         // Fallback to a basic config
         setConfig({
-          paletteId: "forest",
+          paletteId: "diary",
           customPalettes: [],
           bgUrl: "",
           hero: { name: "brook", handle: "@brookerslyn", subtitle: "chronically dumb", typingLinesText: "touch grass\neat grass", scrollHint: "scroll for screamers", splashText: "click to steal your data", showSparkles: false },

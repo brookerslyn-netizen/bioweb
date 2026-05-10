@@ -9,37 +9,20 @@ const API_BASE = import.meta.env.VITE_API_URL ||
 function noteStyle(id: string, index: number) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  const col = index % 4;
-  const row = Math.floor(index / 4);
-  const x = 80 + col * 300 + ((h % 80) - 40);
-  const y = 80 + row * 240 + (((h >> 4) % 60) - 30);
-  const rot = ((h % 18) - 9);
-  // paper-like colors, not too saturated
+  const col = index % 3;
+  const row = Math.floor(index / 3);
+  const x = 60 + col * 340 + ((h % 60) - 30);
+  const y = 60 + row * 280 + (((h >> 4) % 50) - 25);
+  const rot = ((h % 14) - 7);
   const colors = [
     "#fff9c4", "#fce4ec", "#e8f5e9", "#e3f2fd", "#fff3e0", "#f3e5f5", "#fafaf2", "#fff8a8",
   ];
   const color = colors[h % colors.length];
-  // washi tape color on some notes
-  const washiColors = ["#f5a9b8", "#a7f3d0", "#fde68a", "#bfdbfe", "#ddd6fe", null, null, null];
-  const washi = washiColors[h % washiColors.length];
-  const washiAngle = ((h >> 8) % 180) - 90;
-  return { x, y, rot, color, washi, washiAngle };
+  const tapeColors = ["rgba(255,158,193,0.7)", "rgba(110,231,183,0.7)", "rgba(253,224,71,0.7)", "rgba(196,181,253,0.7)", "rgba(251,191,146,0.7)"];
+  const tape = tapeColors[h % tapeColors.length];
+  const tapeAngle = ((h >> 6) % 30) - 15;
+  return { x, y, rot, color, tape, tapeAngle };
 }
-
-/* SVG thumbtack — looks like a real pin */
-function Thumbtack({ color }: { color: string }) {
-  return (
-    <svg width="18" height="24" viewBox="0 0 18 24" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.5))", display: "block" }}>
-      {/* pin head */}
-      <circle cx="9" cy="7" r="6.5" fill={color} stroke="rgba(0,0,0,0.35)" strokeWidth="1" />
-      <circle cx="7" cy="5" r="2" fill="rgba(255,255,255,0.35)" />
-      {/* pin shaft */}
-      <line x1="9" y1="13" x2="9" y2="23" stroke="rgba(0,0,0,0.55)" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-const PIN_COLORS = ["#ef4444", "#3b82f6", "#22c55e", "#f59e0b", "#a855f7", "#ec4899", "#14b8a6"];
 
 export function CommentsSection({
   comments,
@@ -131,42 +114,49 @@ export function CommentsSection({
     catch { /* ignore */ }
   };
 
-  const cols = Math.max(4, Math.ceil(Math.sqrt(comments.length + 2)));
-  const boardW = cols * 300 + 160;
-  const boardH = Math.ceil((comments.length + 2) / cols) * 240 + 160;
+  const cols = Math.max(3, Math.ceil(Math.sqrt(comments.length + 1)));
+  const boardW = cols * 340 + 120;
+  const boardH = Math.ceil((comments.length + 1) / cols) * 280 + 120;
 
   return (
-    <div className="fixed inset-0 z-10 flex flex-col" style={{ background: "#c8a97e" }}>
+    <div className="fixed inset-0 z-10 flex flex-col" style={{ background: "var(--paper-cream, #f5e6c8)" }}>
 
-      {/* cork board texture overlay */}
+      {/* scrapbook page texture */}
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: `
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.28  0 0 0 0 0.1  0 0 0 0.18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.3  0 0 0 0 0.15  0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")
         `,
-        backgroundSize: "120px 120px",
+        backgroundSize: "200px 200px",
         mixBlendMode: "multiply",
-        opacity: 0.9,
+        opacity: 0.6,
       }} />
 
-      {/* header — looks like a wooden frame top bar */}
+      {/* ruled lines across the page */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(91,67,38,0.06) 31px, rgba(91,67,38,0.06) 32px)",
+        opacity: 0.8,
+      }} />
+
+      {/* header */}
       <div className="relative flex-shrink-0 px-6 py-3 flex items-center gap-3 z-20"
         style={{
-          background: "linear-gradient(180deg, #8b5e3c 0%, #6b4423 100%)",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
+          background: "var(--paper-cream, #f5e6c8)",
+          borderBottom: "2px solid rgba(91,67,38,0.12)",
         }}>
-        {/* wood grain lines */}
-        <div className="absolute inset-0 pointer-events-none opacity-20" style={{
-          backgroundImage: "repeating-linear-gradient(90deg, transparent 0px, transparent 18px, rgba(0,0,0,0.3) 18px, rgba(0,0,0,0.3) 19px)",
+        {/* washi tape across header */}
+        <div className="absolute top-0 left-8 right-8 h-5 rounded-sm" style={{
+          background: "repeating-linear-gradient(135deg, rgba(253,224,71,0.75) 0px, rgba(253,224,71,0.75) 8px, rgba(254,240,138,0.75) 8px, rgba(254,240,138,0.75) 16px)",
+          transform: "rotate(-0.5deg)",
         }} />
-        <span style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 24, color: "#fde68a", textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
-          📌 corkboard
+        <span style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 26, color: "var(--paper-ink, #2b2316)" }}>
+          sticky notes
         </span>
-        <span className="text-xs font-mono" style={{ color: "rgba(253,230,138,0.7)" }}>
+        <span className="text-xs font-mono" style={{ color: "var(--paper-ink-soft, #5b4326)", opacity: 0.7 }}>
           {comments.length} notes · drag to explore
         </span>
       </div>
 
-      {/* board */}
+      {/* pannable board */}
       <div
         ref={boardRef}
         className="flex-1 overflow-hidden relative select-none"
@@ -188,25 +178,24 @@ export function CommentsSection({
         }}>
 
           {/* ── write a note ── */}
-          <div className="absolute" style={{ left: 60, top: 50, width: 230, transform: "rotate(-3deg)", zIndex: 10 }}>
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2" style={{ zIndex: 20 }}>
-              <Thumbtack color="var(--p-accent)" />
-            </div>
-            {/* washi tape strip across top */}
-            <div className="absolute -top-2 left-4 right-4 h-5 rounded-sm opacity-80" style={{
-              background: "repeating-linear-gradient(135deg, rgba(253,224,71,0.9) 0px, rgba(253,224,71,0.9) 8px, rgba(254,240,138,0.9) 8px, rgba(254,240,138,0.9) 16px)",
-              transform: "rotate(-1deg)",
+          <div className="absolute" style={{ left: 40, top: 30, width: 240, transform: "rotate(-2deg)", zIndex: 10 }}>
+            {/* tape strip holding the note */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 rounded-sm" style={{
+              background: "rgba(253,224,71,0.8)",
+              transform: "rotate(2deg)",
+              zIndex: 20,
+              borderTop: "1px solid rgba(255,255,255,0.3)",
             }} />
             <div style={{
               background: "#fffde7",
               borderRadius: "2px",
-              padding: "14px 12px 12px",
-              boxShadow: "2px 4px 12px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.8) inset",
-              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(91,67,38,0.08) 23px, rgba(91,67,38,0.08) 24px)",
+              padding: "16px 14px 12px",
+              boxShadow: "2px 4px 14px rgba(0,0,0,0.2), 0 1px 0 rgba(255,255,255,0.8) inset",
+              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(91,67,38,0.06) 23px, rgba(91,67,38,0.06) 24px)",
             }}>
               {submitted ? (
                 <div className="text-center py-4" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 20, color: "#2b2316" }}>
-                  note pinned! ♥
+                  note stuck! ♥
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-2">
@@ -222,7 +211,7 @@ export function CommentsSection({
                     className="w-full px-2 py-1 text-sm outline-none"
                     style={{
                       background: "transparent",
-                      borderBottom: "1.5px solid rgba(91,67,38,0.3)",
+                      borderBottom: "1.5px solid rgba(91,67,38,0.2)",
                       color: "#2b2316",
                       fontFamily: "'Indie Flower', cursive",
                     }}
@@ -247,10 +236,10 @@ export function CommentsSection({
                       type="submit"
                       disabled={isSubmitting || !name.trim() || !message.trim()}
                       className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-widest disabled:opacity-40 transition-transform hover:scale-105"
-                      style={{ background: "var(--p-accent)", color: "var(--p-accent-contrast)", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}
+                      style={{ background: "var(--p-accent)", color: "var(--p-accent-contrast)", boxShadow: "0 2px 6px rgba(0,0,0,0.2)" }}
                     >
                       <Send size={10} />
-                      {isSubmitting ? "..." : "pin it"}
+                      {isSubmitting ? "..." : "stick it"}
                     </button>
                   </div>
                 </form>
@@ -260,48 +249,41 @@ export function CommentsSection({
 
           {/* ── comment notes ── */}
           {comments.map((comment, i) => {
-            const { x, y, rot, color, washi, washiAngle } = noteStyle(comment.id, i);
+            const { x, y, rot, color, tape, tapeAngle } = noteStyle(comment.id, i);
             const hearts = localHearts[comment.id] ?? comment.hearts ?? 0;
             const hearted = heartedIds.has(comment.id);
-            const pinColor = PIN_COLORS[i % PIN_COLORS.length];
 
             return (
-              <div key={comment.id} className="absolute" style={{ left: x, top: y, width: 210, transform: `rotate(${rot}deg)`, zIndex: 1 }}>
-                {/* thumbtack */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2" style={{ zIndex: 5 }}>
-                  <Thumbtack color={pinColor} />
-                </div>
-
-                {/* optional washi tape strip */}
-                {washi && (
-                  <div className="absolute -top-2 left-2 right-2 h-4 opacity-75 rounded-sm" style={{
-                    background: `repeating-linear-gradient(${washiAngle}deg, ${washi} 0px, ${washi} 6px, rgba(255,255,255,0.4) 6px, rgba(255,255,255,0.4) 12px)`,
-                  }} />
-                )}
+              <div key={comment.id} className="absolute group" style={{ left: x, top: y, width: 220, transform: `rotate(${rot}deg)`, zIndex: 1, transition: "transform 200ms ease, z-index 0ms" }}>
+                {/* tape strip holding the note */}
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 rounded-sm" style={{
+                  width: 50 + (i % 3) * 10,
+                  background: tape,
+                  transform: `rotate(${tapeAngle}deg)`,
+                  zIndex: 5,
+                  borderTop: "1px solid rgba(255,255,255,0.3)",
+                  borderBottom: "1px solid rgba(0,0,0,0.04)",
+                }} />
 
                 {/* note paper */}
-                <div style={{
+                <div className="transition-shadow" style={{
                   background: color,
-                  borderRadius: "2px",
-                  padding: "14px 10px 10px",
-                  boxShadow: "3px 5px 14px rgba(0,0,0,0.38), 0 1px 0 rgba(255,255,255,0.7) inset",
-                  // ruled lines
-                  backgroundImage: `linear-gradient(${color}, ${color}), repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(91,67,38,0.1) 23px, rgba(91,67,38,0.1) 24px)`,
+                  borderRadius: "1px",
+                  padding: "14px 12px 10px",
+                  boxShadow: "2px 3px 10px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.7) inset",
+                  backgroundImage: `linear-gradient(${color}, ${color}), repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(91,67,38,0.06) 23px, rgba(91,67,38,0.06) 24px)`,
                   backgroundBlendMode: "normal",
                   position: "relative",
                 }}>
-                  {/* red margin line */}
-                  <div className="absolute top-0 bottom-0" style={{ left: 28, width: 1, background: "rgba(239,68,68,0.25)" }} />
-
-                  <div className="pl-5">
-                    <div className="font-bold truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 17, color: "#2b2316" }}>
+                  <div>
+                    <div className="font-bold truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 16, color: "#2b2316" }}>
                       {comment.name}
                     </div>
                     <div className="mt-1 text-sm leading-6 break-words" style={{ fontFamily: "'Indie Flower', cursive", color: "#2b2316" }}>
                       {comment.message}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                      <span className="text-xs font-mono" style={{ color: "#5b4326", opacity: 0.7 }}>
+                      <span className="text-xs font-mono" style={{ color: "#5b4326", opacity: 0.6 }}>
                         {new Date(comment.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </span>
                       <button

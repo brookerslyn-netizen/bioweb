@@ -147,6 +147,7 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   mix-blend-mode: multiply;
   pointer-events: none;
   opacity: 0.7;
+  z-index: 0;
 }
 .paper-2 {
   background:
