@@ -154,8 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    // covers the falling slide-off (~700ms)
-    setTimeout(() => setEntered(true), 750);
+    // matches the falling stage (~900ms CSS transition)
+    setTimeout(() => setEntered(true), 950);
   }, []);
 
   function logout() {

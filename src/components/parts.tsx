@@ -239,12 +239,12 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     audioRef.current = audio;
     audio.play().catch(() => { /* autoplay blocked — animation still runs */ });
 
-    // Tear + slide apart, then fall off-screen.
+    // Tear + slide apart, then fall off-screen. Matches 1500ms CSS transition for tearing.
     setStage("tearing");
     const t1 = setTimeout(() => {
       setStage("falling");
       onEnter();
-    }, 750);
+    }, 1500);
 
     return () => clearTimeout(t1);
   }, [onEnter]);
