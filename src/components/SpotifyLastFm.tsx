@@ -93,12 +93,20 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
         const tracks = r?.recenttracks?.track || [];
         setRecent(tracks);
         setTopArtists(a?.topartists?.artist || []);
-        if (info?.user) setUserInfo(info.user as LastFmUserInfo);
+        // user.getinfo returns { user: {...} }
+        const u = info?.user;
+        if (u && u.playcount) {
+          setUserInfo(u as LastFmUserInfo);
+        } else if (info?.error) {
+          console.warn("[SpotifyLastFm] user.getinfo error:", info.error, info.message);
+        }
         // Check for now playing - Last.fm returns @attr with nowplaying="true" for currently playing track
         const firstTrack = tracks[0];
         const isNowPlaying = firstTrack?.["@attr"]?.nowplaying === "true" || firstTrack?.["@attr"]?.nowplaying === true;
         setNowPlaying(isNowPlaying ? firstTrack : null);
-      }).catch(() => {}).finally(() => setLoading(false));
+      }).catch((err) => {
+        console.warn("[SpotifyLastFm] fetch error:", err);
+      }).finally(() => setLoading(false));
     };
 
     fetchData();
