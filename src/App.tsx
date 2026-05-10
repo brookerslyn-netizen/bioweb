@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, X, ChevronDown, Music2 } from "lucide-react";
 import "./App.css";
 import bgGif from "./assets/bg/dreamy.gif";
 
@@ -353,9 +353,9 @@ function App() {
       </main>
 
       {/* Persistent music player — rendered once so playback survives view switches.
-          Floats above the main view at the bottom of the screen. */}
+          Lives in a collapsible dock so it doesn't cover scrolled content. */}
       {entered && config && (config.music.enabled && config.features.music) && (
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[45] w-[min(92vw,640px)] pointer-events-auto">
+        <MusicDock>
           <MusicPlayer
             playlist={config.music.playlist}
             volume={config.music.volume}
@@ -364,7 +364,7 @@ function App() {
             crackle={config.music.crackle && config.features.transFlair}
             enabled={config.music.enabled && config.features.music}
           />
-        </div>
+        </MusicDock>
       )}
 
       {/* admin panel */}
@@ -395,3 +395,68 @@ function App() {
 }
 
 export default App;
+
+/* ===================== MusicDock =====================
+ * Floating collapsible wrapper for the persistent MusicPlayer. The player
+ * itself always stays mounted (so playback survives view switches + keeps
+ * going while minimized). When minimized we just hide the expanded UI and
+ * show a small round toggle in the corner.
+ *
+ * State is persisted to localStorage so the user's preference sticks.
+ */
+const MUSIC_DOCK_KEY = "brook-music-dock";
+function MusicDock({ children }: { children: React.ReactNode }) {
+  const [minimized, setMinimized] = useState<boolean>(() => {
+    try { return localStorage.getItem(MUSIC_DOCK_KEY) === "1"; } catch { return false; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(MUSIC_DOCK_KEY, minimized ? "1" : "0"); } catch { /* ignore */ }
+  }, [minimized]);
+
+  return (
+    <>
+      {/* Expanded dock — centered at the bottom, hidden while minimized. */}
+      <div
+        className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[45] w-[min(92vw,640px)] pointer-events-auto transition-all duration-300"
+        style={{
+          opacity: minimized ? 0 : 1,
+          transform: minimized
+            ? "translate(-50%, 120%) scale(0.9)"
+            : "translate(-50%, 0) scale(1)",
+          pointerEvents: minimized ? "none" : "auto",
+        }}
+        aria-hidden={minimized}
+      >
+        <div className="relative">
+          {children}
+          {/* collapse button — only visible when expanded */}
+          <button
+            onClick={() => setMinimized(true)}
+            aria-label="minimize music player"
+            title="hide player"
+            className="absolute top-1 right-1 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+            style={{ background: "var(--p-surface-strong)", color: "var(--p-text)" }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Compact dock toggle — always rendered so the user can bring the player back */}
+      <button
+        onClick={() => setMinimized((m) => !m)}
+        aria-label={minimized ? "show music player" : "minimize music player"}
+        title={minimized ? "show player" : "hide player"}
+        className="fixed bottom-3 right-3 z-[46] w-11 h-11 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+        style={{
+          background: "var(--p-accent)",
+          color: "var(--p-accent-contrast)",
+          opacity: minimized ? 1 : 0.85,
+        }}
+      >
+        {minimized ? <Music2 size={18} /> : <ChevronDown size={18} />}
+      </button>
+    </>
+  );
+}
