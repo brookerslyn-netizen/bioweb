@@ -169,15 +169,13 @@ export function ConnectionsSection({ config }: { config: AppConfig }) {
   return (
     <section id="connections" className="px-6 py-8 max-w-4xl mx-auto">
       <Reveal>
-        <div className="grid md:grid-cols-2 gap-4">
-          <DiscordCard discordId={config.contact.discordId} showCopy={config.contact.showCopyDiscord} />
-          {config.contact.lastfmUsername && (
-            <SpotifyLastFm 
-              username={config.contact.lastfmUsername} 
-              spotifyUrl={config.contact.spotifyUrl} 
-            />
-          )}
-          {config.contact.showEmail && <EmailCard email={config.contact.email} />}
+        <div className="space-y-4">
+          {/* Row 1: Discord + Email */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <DiscordCard discordId={config.contact.discordId} showCopy={config.contact.showCopyDiscord} />
+            {config.contact.showEmail && <EmailCard email={config.contact.email} />}
+          </div>
+          {/* Row 2: Music Player */}
           <MusicPlayer
             playlist={config.music.playlist}
             volume={config.music.volume}
@@ -186,6 +184,13 @@ export function ConnectionsSection({ config }: { config: AppConfig }) {
             crackle={config.music.crackle && config.features.transFlair}
             enabled={config.music.enabled && config.features.music}
           />
+          {/* Row 3: Spotify */}
+          {config.contact.lastfmUsername && (
+            <SpotifyLastFm 
+              username={config.contact.lastfmUsername} 
+              spotifyUrl={config.contact.spotifyUrl} 
+            />
+          )}
         </div>
       </Reveal>
     </section>

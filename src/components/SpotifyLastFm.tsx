@@ -135,8 +135,13 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
       {showRecents && (
         <div className="mt-3">
           <div 
-            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex gap-3 overflow-x-auto pb-3 px-1 scrollbar-hide cursor-grab active:cursor-grabbing"
+            style={{ 
+              scrollbarWidth: "none", 
+              msOverflowStyle: "none",
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch"
+            }}
           >
             {loading ? (
               <div className="text-center py-4 paper-text-muted italic text-sm flex-shrink-0">loading...</div>
@@ -150,6 +155,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                   target="_blank"
                   rel="noreferrer"
                   className="flex-shrink-0 w-36 group"
+                  style={{ scrollSnapAlign: "start" }}
                 >
                   <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors">
                     {getImg(track.image) ? (
@@ -193,8 +199,13 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
       {showArtists && (
         <div className="mt-3">
           <div 
-            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="flex gap-3 overflow-x-auto pb-3 px-1 scrollbar-hide cursor-grab active:cursor-grabbing"
+            style={{ 
+              scrollbarWidth: "none", 
+              msOverflowStyle: "none",
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch"
+            }}
           >
             {loading ? (
               <div className="text-center py-4 paper-text-muted italic text-sm flex-shrink-0">loading...</div>
@@ -208,6 +219,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                   target="_blank"
                   rel="noreferrer"
                   className="flex-shrink-0 w-28 group"
+                  style={{ scrollSnapAlign: "start" }}
                 >
                   <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors text-center">
                     {getImg(artist.image, "small") ? (

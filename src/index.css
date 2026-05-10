@@ -102,4 +102,13 @@
   }
   .palette-gif-opacity { opacity: var(--p-gif-opacity); }
   .palette-gif-filter { filter: var(--p-gif-filter); }
+
+  /* Hide scrollbar utility for horizontal scrollable areas */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
