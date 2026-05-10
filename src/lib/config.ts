@@ -123,7 +123,7 @@ export type AppConfig = {
 /* ===== defaults (with all 100 user answers baked in) ===== */
 
 export const DEFAULT_CONFIG: AppConfig = {
-  paletteId: "forest",
+  paletteId: "diary",
   customPalettes: [],
   bgUrl: "",
 
@@ -261,8 +261,9 @@ export async function loadConfig(): Promise<AppConfig> {
     console.log('Loading config from API...');
     const response = await fetch(`${API_BASE}/config`);
     if (response.ok) {
-      const config = await response.json();
-      console.log('Loaded config from API:', config);
+      const raw = await response.json();
+      console.log('Loaded config from API:', raw);
+      const config = mergeConfig(DEFAULT_CONFIG, raw);
       // Cache in localStorage as fallback
       localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
       return config;
