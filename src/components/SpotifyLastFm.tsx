@@ -213,38 +213,32 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
               recentTracks.map((track, i) => {
                 const isSearching = searchingTrackUrl === track.url;
                 const isPlaying = playingTrackUrl === track.url;
-                const showCorner = isPlaying || isSearching;
+                const isActive = isPlaying || isSearching;
                 return (
                   <div
-                    key={i}
+                    key={`${track.url}-${i}`}
                     className="flex-shrink-0 w-36 group relative"
                     style={{ scrollSnapAlign: "start" }}
                   >
-                    {/* Corner indicator — only shown while this track is active */}
-                    {showCorner && (
-                      <button
-                        onClick={(e) => handlePlayTrack(track, e)}
-                        className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full palette-accent-bg flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
-                      >
-                        {isSearching ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <Pause size={16} />
-                        )}
-                      </button>
-                    )}
                     <a
                       href={track.url}
                       target="_blank"
                       rel="noreferrer"
                       className="block"
                     >
-                      <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors relative">
+                      <div
+                        className="paper p-2 rounded-lg hover:bg-black/5 transition-colors relative"
+                        style={
+                          isActive
+                            ? { outline: "2px solid var(--p-accent)", outlineOffset: "-2px" }
+                            : undefined
+                        }
+                      >
                         <div className="relative mb-2">
                           {getImg(track.image) ? (
-                            <img 
-                              src={getImg(track.image)} 
-                              alt="" 
+                            <img
+                              src={getImg(track.image)}
+                              alt=""
                               className="w-full aspect-square rounded object-cover"
                             />
                           ) : (
@@ -252,10 +246,10 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                               <Music2 size={20} />
                             </div>
                           )}
-                          {/* Hover play button (controlled purely by group-hover + active state) */}
+                          {/* single play/pause overlay — always visible when active, hover-only otherwise */}
                           <button
                             onClick={(e) => handlePlayTrack(track, e)}
-                            className={`absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity ${showCorner ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                            className={`absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity duration-150 ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                           >
                             <div className="w-10 h-10 rounded-full palette-accent-bg flex items-center justify-center shadow-lg">
                               {isSearching ? (
