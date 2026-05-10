@@ -153,7 +153,7 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    setTimeout(() => setEntered(true), 600);
+    setTimeout(() => setEntered(true), 650);
   }, []);
 
   function logout() {

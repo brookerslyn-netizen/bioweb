@@ -176,7 +176,7 @@ export function Typewriter({ lines }: { lines: string[] }) {
   );
 }
 
-/* ===================== Splash (no sparkles, just text) ===================== */
+/* ===================== Splash (paper tear to enter) ===================== */
 
 export function Splash({ onEnter, leaving, name, splashText }: {
   onEnter: () => void;
@@ -187,22 +187,30 @@ export function Splash({ onEnter, leaving, name, splashText }: {
   return (
     <div
       onClick={onEnter}
-      className={`fixed inset-0 z-50 cursor-pointer flex flex-col items-center justify-center text-center px-6 ${leaving ? "splash-fade-out" : ""}`}
+      className={`fixed inset-0 z-50 cursor-pointer flex flex-col items-center justify-center text-center px-6 ${leaving ? "splash-leaving" : ""}`}
     >
       <div className="absolute inset-0 -z-10 palette-veil" />
       <div className="absolute inset-0 -z-20 palette-bg" />
-      <RansomNote
-        name={name}
-        sizes={[80, 90, 70, 95, 80]}
-        className="palette-text-shadow"
-        style={{ marginBottom: "1.5rem" }}
-      />
-      <p className="mt-6 text-2xl md:text-3xl palette-text-soft" style={{ fontFamily: "'Indie Flower', cursive" }}>
-        {splashText}
-      </p>
-      <p className="mt-3 text-xs uppercase tracking-[0.3em] font-mono palette-text-muted">
-        [ click anywhere ]
-      </p>
+
+      {/* top tear strip */}
+      <div className={`splash-tear splash-tear-top ${leaving ? "splash-tear-top-out" : ""}`} />
+      {/* bottom tear strip */}
+      <div className={`splash-tear splash-tear-bottom ${leaving ? "splash-tear-bottom-out" : ""}`} />
+
+      <div className={`splash-content ${leaving ? "splash-content-out" : ""}`}>
+        <RansomNote
+          name={name}
+          sizes={[80, 90, 70, 95, 80]}
+          className="palette-text-shadow"
+          style={{ marginBottom: "1.5rem" }}
+        />
+        <p className="mt-6 text-2xl md:text-3xl palette-text-soft" style={{ fontFamily: "'Indie Flower', cursive" }}>
+          {splashText}
+        </p>
+        <p className="mt-3 text-xs uppercase tracking-[0.3em] font-mono palette-text-muted animate-pulse">
+          [ click to enter ]
+        </p>
+      </div>
     </div>
   );
 }
