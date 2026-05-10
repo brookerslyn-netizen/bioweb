@@ -154,8 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    // splash fades itself out; small buffer before fully unmounting
-    setTimeout(() => setEntered(true), 60);
+    // splash has already run its own transition; unmount right away
+    setTimeout(() => setEntered(true), 50);
   }, []);
 
   function logout() {

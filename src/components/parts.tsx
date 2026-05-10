@@ -179,46 +179,7 @@ export function Typewriter({ lines }: { lines: string[] }) {
   );
 }
 
-/* ===================== Splash (page rip to enter) ===================== */
-
-/* Dense jagged seam — lots of points with aggressive jitter so the torn
-   edge reads as fibrous paper rather than a smooth curve. */
-const TEAR_POINTS: [number, number][] = (() => {
-  const pts: [number, number][] = [];
-  // deterministic pseudo-random so the shape is stable
-  let seed = 9871;
-  const rand = () => {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    return (seed / 0x7fffffff);
-  };
-  pts.push([0, 0]);
-  const steps = 80;
-  for (let i = 1; i < steps; i++) {
-    const y = (i / steps) * 100;
-    // bigger primary jitter + occasional "fibre" spikes
-    let dx = (rand() - 0.5) * 4.5;
-    if (rand() < 0.18) dx += (rand() - 0.5) * 3.5; // random fiber spike
-    pts.push([y, dx]);
-  }
-  pts.push([100, 0]);
-  return pts;
-})();
-
-const LEFT_POLYGON = (() => {
-  const pts: string[] = ["0% 0%"];
-  for (const [y, dx] of TEAR_POINTS) pts.push(`${50 + dx}% ${y}%`);
-  pts.push("0% 100%");
-  return `polygon(${pts.join(", ")})`;
-})();
-
-const RIGHT_POLYGON = (() => {
-  const pts: string[] = [];
-  for (const [y, dx] of TEAR_POINTS) pts.push(`${50 + dx}% ${y}%`);
-  pts.push("100% 100%", "100% 0%");
-  return `polygon(${pts.join(", ")})`;
-})();
-
-type SplashStage = "idle" | "tearing" | "falling";
+/* ===================== Splash (scrapbook page lift) ===================== */
 
 export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
   onEnter: () => void;
@@ -226,7 +187,7 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
   name: string;
   splashText: string;
 }) {
-  const [stage, setStage] = useState<SplashStage>("idle");
+  const [lifting, setLifting] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const triggeredRef = useRef(false);
 
@@ -235,15 +196,12 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     triggeredRef.current = true;
 
     const audio = new Audio(tearMp3);
-    audio.volume = 0.95;
+    audio.volume = 0.75;
     audioRef.current = audio;
     audio.play().catch(() => { /* autoplay blocked — animation still runs */ });
 
-    // Single smooth 2s transition: halves pull apart then slide off screen
-    // in one continuous motion. No mid-stage state change.
-    setStage("tearing");
-    const t1 = setTimeout(() => onEnter(), 2000);
-
+    setLifting(true);
+    const t1 = setTimeout(() => onEnter(), 650);
     return () => clearTimeout(t1);
   }, [onEnter]);
 
@@ -254,54 +212,36 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     };
   }, []);
 
-  const content = (
-    <div className="splash-face">
-      <RansomNote
-        name={name}
-        sizes={[80, 90, 70, 95, 80]}
-        className="palette-text-shadow"
-        style={{ marginBottom: "1.5rem" }}
-      />
-      <p className="mt-6 text-2xl md:text-3xl palette-text-soft" style={{ fontFamily: "'Indie Flower', cursive" }}>
-        {splashText}
-      </p>
-      <div className="mt-6 inline-block">
-        <p className="text-xs uppercase tracking-[0.3em] font-mono palette-text-muted animate-pulse">
-          click anywhere
-        </p>
-      </div>
-    </div>
-  );
-
   return (
     <div
       onClick={handleClick}
-      className="splash-root"
-      data-stage={stage}
+      className={`splash-root ${lifting ? "is-lifting" : ""}`}
     >
-      <style>{`
-        .splash-left-clip { clip-path: ${LEFT_POLYGON}; -webkit-clip-path: ${LEFT_POLYGON}; }
-        .splash-right-clip { clip-path: ${RIGHT_POLYGON}; -webkit-clip-path: ${RIGHT_POLYGON}; }
-      `}</style>
+      <div className="splash-veil" />
 
-      {/* washi tape layers */}
-      <div className="splash-washi-layer splash-left-clip splash-left-move">
-        <div className="absolute top-[15%] left-[10%] washi washi-pink" style={{ width: 80, height: 18, transform: "rotate(-18deg)", opacity: 0.5 }} />
-        <div className="absolute bottom-[25%] left-[18%] washi washi-yellow" style={{ width: 90, height: 18, transform: "rotate(6deg)", opacity: 0.45 }} />
-      </div>
-      <div className="splash-washi-layer splash-right-clip splash-right-move">
-        <div className="absolute top-[20%] right-[12%] washi washi-mint" style={{ width: 70, height: 18, transform: "rotate(12deg)", opacity: 0.4 }} />
-        <div className="absolute bottom-[18%] right-[15%] washi washi-lavender" style={{ width: 65, height: 18, transform: "rotate(-10deg)", opacity: 0.35 }} />
-      </div>
+      <div className="splash-sheet">
+        {/* washi tape holding the corners */}
+        <div className="washi washi-pink"     style={{ position: "absolute", top: -14, left: "18%",  width: 90, transform: "rotate(-8deg)" }} />
+        <div className="washi washi-yellow"   style={{ position: "absolute", top: -14, right: "18%", width: 80, transform: "rotate(6deg)" }} />
+        <div className="washi washi-mint"     style={{ position: "absolute", bottom: -12, left: "22%",  width: 70, transform: "rotate(4deg)" }} />
+        <div className="washi washi-lavender" style={{ position: "absolute", bottom: -12, right: "20%", width: 75, transform: "rotate(-5deg)" }} />
 
-      {/* LEFT half — carries the whole face, clipped to the left side of the tear */}
-      <div className="splash-half splash-left splash-left-clip splash-left-move">
-        {content}
-      </div>
-
-      {/* RIGHT half — same face, clipped to the right */}
-      <div className="splash-half splash-right splash-right-clip splash-right-move">
-        {content}
+        <div className="splash-face">
+          <RansomNote
+            name={name}
+            sizes={[80, 90, 70, 95, 80]}
+            className="palette-text-shadow"
+            style={{ marginBottom: "1.5rem" }}
+          />
+          <p className="mt-6 text-2xl md:text-3xl palette-text-soft" style={{ fontFamily: "'Indie Flower', cursive" }}>
+            {splashText}
+          </p>
+          <div className="mt-6 inline-block">
+            <p className="text-xs uppercase tracking-[0.3em] font-mono palette-text-muted animate-pulse">
+              click anywhere
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
