@@ -213,27 +213,26 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
               recentTracks.map((track, i) => {
                 const isSearching = searchingTrackUrl === track.url;
                 const isPlaying = playingTrackUrl === track.url;
+                const showCorner = isPlaying || isSearching;
                 return (
                   <div
                     key={i}
                     className="flex-shrink-0 w-36 group relative"
                     style={{ scrollSnapAlign: "start" }}
                   >
-                    {/* Play button overlay */}
-                    <button
-                      onClick={(e) => handlePlayTrack(track, e)}
-                      className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full palette-accent-bg flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
-                      style={{ opacity: isPlaying || isSearching ? 1 : 0, transition: "opacity 200ms" }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
-                    >
-                      {isSearching ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : isPlaying ? (
-                        <Pause size={16} />
-                      ) : (
-                        <Play size={16} className="ml-0.5" />
-                      )}
-                    </button>
+                    {/* Corner indicator — only shown while this track is active */}
+                    {showCorner && (
+                      <button
+                        onClick={(e) => handlePlayTrack(track, e)}
+                        className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full palette-accent-bg flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                      >
+                        {isSearching ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Pause size={16} />
+                        )}
+                      </button>
+                    )}
                     <a
                       href={track.url}
                       target="_blank"
@@ -241,17 +240,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                       className="block"
                     >
                       <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors relative">
-                        <div 
-                          className="relative mb-2"
-                          onMouseEnter={(e) => {
-                            const btn = e.currentTarget.querySelector("button");
-                            if (btn) btn.style.opacity = "1";
-                          }}
-                          onMouseLeave={(e) => {
-                            const btn = e.currentTarget.querySelector("button");
-                            if (btn && !isPlaying && !isSearching) btn.style.opacity = "0";
-                          }}
-                        >
+                        <div className="relative mb-2">
                           {getImg(track.image) ? (
                             <img 
                               src={getImg(track.image)} 
@@ -263,10 +252,10 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                               <Music2 size={20} />
                             </div>
                           )}
-                          {/* Hover play button */}
+                          {/* Hover play button (controlled purely by group-hover + active state) */}
                           <button
                             onClick={(e) => handlePlayTrack(track, e)}
-                            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity opacity-0 group-hover:opacity-100"
+                            className={`absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity ${showCorner ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
                           >
                             <div className="w-10 h-10 rounded-full palette-accent-bg flex items-center justify-center shadow-lg">
                               {isSearching ? (
