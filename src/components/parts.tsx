@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import tearMp3 from "../assets/tear.mp3";
+import strawberryGif from "../assets/strawberry.gif";
 
 /* ===================== Reveal on scroll ===================== */
 
@@ -100,17 +101,12 @@ export function BerryFollower({ active }: { active: boolean }) {
   if (!active) return null;
   return (
     <div ref={ref} className="berry-follower">
-      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden>
-        <path d="M16 6 C 11 4, 7 7, 7 13 C 7 22, 12 28, 16 28 C 20 28, 25 22, 25 13 C 25 7, 21 4, 16 6 Z"
-              fill="#ef4444" stroke="#7a1212" strokeWidth="0.7" />
-        <path d="M11 4 C 13 2, 14 6, 16 6 C 18 6, 19 2, 21 4 L 19 8 L 13 8 Z" fill="#22c55e" stroke="#0a4d1a" strokeWidth="0.5" />
-        {/* seeds */}
-        {[
-          [12, 14], [16, 12], [20, 14], [13, 18], [17, 17], [21, 19], [14, 22], [18, 22],
-        ].map(([cx, cy], i) => (
-          <ellipse key={i} cx={cx} cy={cy} rx="0.7" ry="1" fill="#fde68a" />
-        ))}
-      </svg>
+      <img
+        src={strawberryGif}
+        alt=""
+        aria-hidden
+        draggable={false}
+      />
     </div>
   );
 }
