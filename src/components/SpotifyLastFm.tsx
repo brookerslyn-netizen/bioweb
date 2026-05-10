@@ -25,6 +25,13 @@ function getImg(images: { "#text": string; size: string }[], size = "medium") {
   return images?.find(i => i.size === size)?.["#text"] || images?.[images.length - 1]?.["#text"] || "";
 }
 
+/** Last.fm serves a known placeholder PNG when an artist has no real photo.
+ *  Detect it by the shared hash in the filename so we can fall back to Deezer. */
+function isLastFmPlaceholder(url: string): boolean {
+  if (!url) return true;
+  return /2a96cbd8b46e442fc41c2b86b821562f|default_avatar|\/noimage\//.test(url);
+}
+
 interface SpotifyLastFmProps {
   username: string;
   spotifyUrl: string;
@@ -39,6 +46,9 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
   const [showArtists, setShowArtists] = useState(false);
   const [playingTrackUrl, setPlayingTrackUrl] = useState<string | null>(null);
   const [searchingTrackUrl, setSearchingTrackUrl] = useState<string | null>(null);
+  // Deezer-resolved artist images keyed by artist name (lowercased). Filled in
+  // after topArtists loads, because Last.fm mostly returns placeholder images.
+  const [artistImages, setArtistImages] = useState<Record<string, string>>({});
   const playingYtId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -71,6 +81,42 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [username]);
+
+  // Resolve artist profile images via Deezer for any entry that Last.fm left
+  // as a placeholder. Runs whenever the top-artists list changes.
+  useEffect(() => {
+    if (!topArtists.length) return;
+    let cancelled = false;
+
+    const needed = topArtists
+      .filter((a) => isLastFmPlaceholder(getImg(a.image, "medium")))
+      .map((a) => a.name);
+
+    if (needed.length === 0) return;
+
+    (async () => {
+      const results = await Promise.all(
+        needed.map(async (name) => {
+          try {
+            const r = await fetch(`${API_BASE}/artist-image?name=${encodeURIComponent(name)}`);
+            if (!r.ok) return [name, ""] as const;
+            const data = await r.json();
+            return [name, data.url || ""] as const;
+          } catch {
+            return [name, ""] as const;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setArtistImages((prev) => {
+        const next = { ...prev };
+        for (const [name, url] of results) if (url) next[name.toLowerCase()] = url;
+        return next;
+      });
+    })();
+
+    return () => { cancelled = true; };
+  }, [topArtists]);
 
   // Listen for music player stopping to clear playing indicator
   useEffect(() => {
@@ -307,44 +353,51 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
             ) : topArtists.length === 0 ? (
               <div className="text-center py-4 paper-text-muted italic text-sm flex-shrink-0">no top artists</div>
             ) : (
-              topArtists.map((artist, i) => (
-                <a
-                  key={i}
-                  href={artist.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-shrink-0 w-28 group"
-                  style={{ scrollSnapAlign: "start" }}
-                >
-                  <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors text-center">
-                    {getImg(artist.image, "small") ? (
-                      <img 
-                        src={getImg(artist.image, "small")} 
-                        alt="" 
-                        className="w-16 h-16 rounded-full object-cover mx-auto mb-2"
-                      />
-                    ) : (
-                      <div 
-                        className="w-16 h-16 rounded-full mx-auto mb-2 palette-accent-bg flex items-center justify-center text-lg font-bold"
-                        style={{ color: "var(--p-accent-contrast)" }}
+              topArtists.map((artist, i) => {
+                const lfmImg = getImg(artist.image, "medium");
+                const resolved = artistImages[artist.name.toLowerCase()];
+                // Prefer Deezer-resolved image when Last.fm returned a placeholder
+                const imgSrc = !isLastFmPlaceholder(lfmImg) ? lfmImg : resolved || "";
+                return (
+                  <a
+                    key={i}
+                    href={artist.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-shrink-0 w-28 group"
+                    style={{ scrollSnapAlign: "start" }}
+                  >
+                    <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors text-center">
+                      {imgSrc ? (
+                        <img
+                          src={imgSrc}
+                          alt=""
+                          loading="lazy"
+                          className="w-16 h-16 rounded-full object-cover mx-auto mb-2"
+                        />
+                      ) : (
+                        <div
+                          className="w-16 h-16 rounded-full mx-auto mb-2 palette-accent-bg flex items-center justify-center text-lg font-bold"
+                          style={{ color: "var(--p-accent-contrast)" }}
+                        >
+                          {artist.name[0]}
+                        </div>
+                      )}
+                      <div
+                        className="text-xs font-medium paper-text truncate"
+                        style={{ fontFamily: "'Indie Flower', cursive" }}
+                        title={artist.name}
                       >
-                        {artist.name[0]}
+                        {artist.name}
                       </div>
-                    )}
-                    <div 
-                      className="text-xs font-medium paper-text truncate" 
-                      style={{ fontFamily: "'Indie Flower', cursive" }}
-                      title={artist.name}
-                    >
-                      {artist.name}
+                      <div className="flex items-center justify-center gap-1 text-[10px] paper-text-muted mt-1">
+                        <BarChart2 size={10} />
+                        {parseInt(artist.playcount).toLocaleString()}
+                      </div>
                     </div>
-                    <div className="flex items-center justify-center gap-1 text-[10px] paper-text-muted mt-1">
-                      <BarChart2 size={10} />
-                      {parseInt(artist.playcount).toLocaleString()}
-                    </div>
-                  </div>
-                </a>
-              ))
+                  </a>
+                );
+              })
             )}
           </div>
         </div>

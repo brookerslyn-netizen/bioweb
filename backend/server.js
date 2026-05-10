@@ -618,6 +618,36 @@ app.get('/api/youtube/search', async (req, res) => {
   }
 });
 
+// Artist image lookup via Deezer's public search (Last.fm artist images
+// are mostly gray-star placeholders so we fall back to Deezer for real pfps).
+// Cached in memory for 24h so we don't hammer Deezer on every page load.
+const artistImageCache = new Map(); // name(lower) -> { url, expires }
+const ARTIST_IMG_TTL = 24 * 60 * 60 * 1000;
+
+app.get('/api/artist-image', async (req, res) => {
+  const name = String(req.query.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'name required' });
+
+  const key = name.toLowerCase();
+  const cached = artistImageCache.get(key);
+  if (cached && cached.expires > Date.now()) {
+    return res.json({ url: cached.url, cached: true });
+  }
+
+  try {
+    const r = await fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(name)}&limit=1`);
+    const data = await r.json();
+    const first = Array.isArray(data?.data) ? data.data[0] : null;
+    // Prefer the highest-quality image available
+    const url = first?.picture_xl || first?.picture_big || first?.picture_medium || first?.picture || '';
+    artistImageCache.set(key, { url, expires: Date.now() + ARTIST_IMG_TTL });
+    res.json({ url });
+  } catch (error) {
+    console.error('artist-image lookup error:', error);
+    res.json({ url: '' });
+  }
+});
+
 // === Admin moderation routes ===
 
 // DELETE comment (admin)
