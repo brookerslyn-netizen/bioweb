@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Music2, ExternalLink, BarChart2, ChevronDown, ChevronRight, Play, Pause, Loader2 } from "lucide-react";
+import { Music2, ExternalLink, BarChart2, ChevronDown, ChevronRight, Play, Pause, Loader2, Info } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3001/api");
 const PLAY_YT_TRACK_EVENT = "play-yt-track";
@@ -43,6 +43,13 @@ function isLastFmPlaceholder(url: string): boolean {
   return /2a96cbd8b46e442fc41c2b86b821562f|default_avatar|\/noimage\//.test(url);
 }
 
+interface LastFmUserInfo {
+  playcount: string;
+  registered: { unixtime: string; "#text": string | number };
+  url: string;
+  name: string;
+}
+
 interface SpotifyLastFmProps {
   username: string;
   spotifyUrl: string;
@@ -52,6 +59,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
   const [nowPlaying, setNowPlaying] = useState<LastFmTrack | null>(null);
   const [recent, setRecent] = useState<LastFmTrack[]>([]);
   const [topArtists, setTopArtists] = useState<LastFmTopArtist[]>([]);
+  const [userInfo, setUserInfo] = useState<LastFmUserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRecents, setShowRecents] = useState(false);
   const [showArtists, setShowArtists] = useState(false);
@@ -75,14 +83,17 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
     const fetchData = () => {
       const recentUrl = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=10&api_key=${key}&format=json`;
       const artistsUrl = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=1month&limit=10&api_key=${key}&format=json`;
+      const infoUrl = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${username}&api_key=${key}&format=json`;
 
       Promise.all([
         fetch(recentUrl).then(r => r.json()),
         fetch(artistsUrl).then(r => r.json()),
-      ]).then(([r, a]) => {
+        fetch(infoUrl).then(r => r.json()),
+      ]).then(([r, a, info]) => {
         const tracks = r?.recenttracks?.track || [];
         setRecent(tracks);
         setTopArtists(a?.topartists?.artist || []);
+        if (info?.user) setUserInfo(info.user as LastFmUserInfo);
         // Check for now playing - Last.fm returns @attr with nowplaying="true" for currently playing track
         const firstTrack = tracks[0];
         const isNowPlaying = firstTrack?.["@attr"]?.nowplaying === "true" || firstTrack?.["@attr"]?.nowplaying === true;
@@ -267,6 +278,11 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
           <ExternalLink size={14} className="paper-text-muted" />
         </a>
       </div>
+
+      {/* Scrobble stats — total plays since account creation, with listen-time tooltip */}
+      {userInfo && parseInt(userInfo.playcount) > 0 && (
+        <ScrobbleStats info={userInfo} />
+      )}
 
       {/* Expandable Toggle Buttons */}
       <div className="mt-3 flex gap-2">
@@ -463,6 +479,81 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ===================== Scrobble stats ===================== */
+
+function formatInt(n: number): string {
+  return n.toLocaleString("en-US");
+}
+
+/** Render a condensed duration from a total in minutes — "X days, Y hours"
+ *  style readout, auto-picking the biggest unit. */
+function humanizeMinutes(totalMinutes: number): string {
+  const days = Math.floor(totalMinutes / (60 * 24));
+  if (days >= 2) {
+    const hours = Math.floor((totalMinutes - days * 60 * 24) / 60);
+    return hours > 0 ? `${formatInt(days)} days, ${hours}h` : `${formatInt(days)} days`;
+  }
+  const hours = Math.floor(totalMinutes / 60);
+  if (hours >= 2) {
+    const mins = Math.floor(totalMinutes - hours * 60);
+    return mins > 0 ? `${formatInt(hours)}h ${mins}m` : `${formatInt(hours)} hours`;
+  }
+  return `${formatInt(Math.round(totalMinutes))} minutes`;
+}
+
+function ScrobbleStats({ info }: { info: LastFmUserInfo }) {
+  const plays = parseInt(info.playcount, 10) || 0;
+  const registeredSec = parseInt(info.registered?.unixtime || "0", 10) || 0;
+  const registeredDate = registeredSec ? new Date(registeredSec * 1000) : null;
+  const years = registeredDate
+    ? Math.max(0, (Date.now() - registeredDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+    : 0;
+
+  // assume average track length ~3 minutes; good enough for a "vibe" readout
+  const AVG_MINUTES = 3;
+  const totalMinutes = plays * AVG_MINUTES;
+  const listenSpan = humanizeMinutes(totalMinutes);
+
+  const sinceLabel = registeredDate
+    ? registeredDate.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : "launch";
+
+  const tooltipText = years >= 0.25
+    ? `averaging ~${AVG_MINUTES}-minute tracks, that's the equivalent of listening to music for ${listenSpan}!`
+    : `${formatInt(plays)} scrobbles since your account was made`;
+
+  return (
+    <div className="mt-3 px-3 py-2 rounded-lg paper-2 paper-text flex items-center gap-2 text-xs md:text-sm">
+      <BarChart2 size={14} className="paper-text-muted flex-shrink-0" />
+      <span style={{ fontFamily: "'Indie Flower', cursive" }}>
+        scrobbled{" "}
+        <span className="relative group inline-flex items-center gap-1 font-bold">
+          <span>{formatInt(plays)}</span>
+          <span className="paper-text-muted">tracks</span>
+          <Info size={12} className="paper-text-muted cursor-help" />
+          {/* hover/focus tooltip */}
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 max-w-[70vw] p-2 rounded text-xs font-mono tracking-normal opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-20"
+            style={{
+              background: "var(--p-surface-strong, #2a2118)",
+              color: "var(--p-text, #f5eeda)",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
+              fontFamily: "'Indie Flower', cursive",
+              fontSize: 13,
+              lineHeight: 1.35,
+              whiteSpace: "normal",
+            }}
+          >
+            {tooltipText}
+          </span>
+        </span>
+        {" "}since {sinceLabel}
+      </span>
     </div>
   );
 }
