@@ -25,6 +25,17 @@ function getImg(images: { "#text": string; size: string }[], size = "medium") {
   return images?.find(i => i.size === size)?.["#text"] || images?.[images.length - 1]?.["#text"] || "";
 }
 
+/** Pick the best available track/album cover from Last.fm's size list.
+ *  Walks from largest to smallest; returns the first non-empty non-placeholder. */
+function getBestCover(images: { "#text": string; size: string }[]): string {
+  const order = ["mega", "extralarge", "large", "medium", "small"];
+  for (const size of order) {
+    const url = images?.find(i => i.size === size)?.["#text"];
+    if (url && !isLastFmPlaceholder(url)) return url;
+  }
+  return "";
+}
+
 /** Last.fm serves a known placeholder PNG when an artist has no real photo.
  *  Detect it by the shared hash in the filename so we can fall back to Deezer. */
 function isLastFmPlaceholder(url: string): boolean {
@@ -49,6 +60,9 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
   // Deezer-resolved artist images keyed by artist name (lowercased). Filled in
   // after topArtists loads, because Last.fm mostly returns placeholder images.
   const [artistImages, setArtistImages] = useState<Record<string, string>>({});
+  // Deezer-resolved album covers keyed by "artist||track". Filled in when a
+  // recent track has no large cover available from Last.fm.
+  const [trackCovers, setTrackCovers] = useState<Record<string, string>>({});
   const playingYtId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -81,6 +95,49 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [username]);
+
+  // Resolve album covers via Deezer for any recent track that Last.fm left
+  // without a usable cover (no image or only a tiny placeholder).
+  useEffect(() => {
+    if (!recent.length) return;
+    let cancelled = false;
+
+    const needed = recent
+      .filter((t) => !getBestCover(t.image))
+      .map((t) => ({
+        artist: t.artist?.["#text"] || "",
+        track: t.name,
+        key: `${(t.artist?.["#text"] || "").toLowerCase()}||${t.name.toLowerCase()}`,
+      }))
+      .filter((t) => t.artist && t.track);
+
+    if (needed.length === 0) return;
+
+    (async () => {
+      const results = await Promise.all(
+        needed.map(async ({ artist, track, key }) => {
+          try {
+            const r = await fetch(
+              `${API_BASE}/track-cover?artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}`,
+            );
+            if (!r.ok) return [key, ""] as const;
+            const data = await r.json();
+            return [key, data.url || ""] as const;
+          } catch {
+            return [key, ""] as const;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setTrackCovers((prev) => {
+        const next = { ...prev };
+        for (const [key, url] of results) if (url) next[key] = url;
+        return next;
+      });
+    })();
+
+    return () => { cancelled = true; };
+  }, [recent]);
 
   // Resolve artist profile images via Deezer for any entry that Last.fm left
   // as a placeholder. Runs whenever the top-artists list changes.
@@ -172,10 +229,10 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
     <div className="rounded-2xl p-4 paper paper-text">
       {/* Header / Now Playing */}
       <div className="flex items-center gap-3">
-        {nowPlaying && getImg(nowPlaying.image) ? (
-          <img 
-            src={getImg(nowPlaying.image)} 
-            alt="" 
+        {nowPlaying && getBestCover(nowPlaying.image) ? (
+          <img
+            src={getBestCover(nowPlaying.image)}
+            alt=""
             className="w-12 h-12 rounded-xl object-cover animate-pulse"
           />
         ) : (
@@ -260,6 +317,9 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                 const isSearching = searchingTrackUrl === track.url;
                 const isPlaying = playingTrackUrl === track.url;
                 const isActive = isPlaying || isSearching;
+                const lfmCover = getBestCover(track.image);
+                const coverKey = `${(track.artist?.["#text"] || "").toLowerCase()}||${track.name.toLowerCase()}`;
+                const coverSrc = lfmCover || trackCovers[coverKey] || "";
                 return (
                   <div
                     key={`${track.url}-${i}`}
@@ -281,10 +341,11 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                         }
                       >
                         <div className="relative mb-2">
-                          {getImg(track.image) ? (
+                          {coverSrc ? (
                             <img
-                              src={getImg(track.image)}
+                              src={coverSrc}
                               alt=""
+                              loading="lazy"
                               className="w-full aspect-square rounded object-cover"
                             />
                           ) : (

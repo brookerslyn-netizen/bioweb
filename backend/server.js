@@ -648,6 +648,38 @@ app.get('/api/artist-image', async (req, res) => {
   }
 });
 
+// Track/album cover lookup via Deezer. Used when Last.fm returns no usable
+// cover (or only a tiny placeholder). Returns the highest-quality album art.
+const trackCoverCache = new Map(); // `${artist}||${track}` -> { url, expires }
+app.get('/api/track-cover', async (req, res) => {
+  const artist = String(req.query.artist || '').trim();
+  const track = String(req.query.track || '').trim();
+  if (!artist || !track) return res.status(400).json({ error: 'artist and track required' });
+
+  const key = `${artist.toLowerCase()}||${track.toLowerCase()}`;
+  const cached = trackCoverCache.get(key);
+  if (cached && cached.expires > Date.now()) {
+    return res.json({ url: cached.url, cached: true });
+  }
+
+  try {
+    const q = encodeURIComponent(`artist:"${artist}" track:"${track}"`);
+    const r = await fetch(`https://api.deezer.com/search/track?q=${q}&limit=1`);
+    const data = await r.json();
+    const first = Array.isArray(data?.data) ? data.data[0] : null;
+    const url = first?.album?.cover_xl
+      || first?.album?.cover_big
+      || first?.album?.cover_medium
+      || first?.album?.cover
+      || '';
+    trackCoverCache.set(key, { url, expires: Date.now() + ARTIST_IMG_TTL });
+    res.json({ url });
+  } catch (error) {
+    console.error('track-cover lookup error:', error);
+    res.json({ url: '' });
+  }
+});
+
 // === Admin moderation routes ===
 
 // DELETE comment (admin)
