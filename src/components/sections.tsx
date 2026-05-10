@@ -12,10 +12,7 @@ export function HeroSection({ config, onNameClick }: { config: AppConfig; onName
   const lines = splitLines(config.hero.typingLinesText);
   return (
     <section id="hero" className="relative pt-12 md:pt-20 pb-16 md:pb-24 px-6 text-center">
-      <Doodle kind="star" top="22%" left="6%" size={40} rotate={-15} />
-      <Doodle kind="swirl" top="68%" left="86%" size={56} rotate={20} />
-      <Doodle kind="arrow" top="10%" left="78%" size={70} rotate={20} />
-      <Doodle kind="flower" top="75%" left="12%" size={35} rotate={30} />
+      <Doodle kind="star" top="22%" left="6%" size={32} rotate={-15} />
 
       {/* decorative tape strips */}
       <div className="absolute top-4 left-[15%] washi washi-peach hidden md:block" style={{ width: 60, height: 16, transform: "rotate(-12deg)" }} />
@@ -459,10 +456,6 @@ export function FooterSection({ config }: { config: AppConfig }) {
   const visits = useViewCount();
   return (
     <footer id="footer" className="relative mt-12 pt-12 pb-8 px-6 text-center">
-      <Doodle kind="heart" top="20%" left="14%" size={36} rotate={-20} />
-      <Doodle kind="swirl" top="36%" left="84%" size={48} rotate={10} />
-      <Doodle kind="flower" top="60%" left="8%" size={28} rotate={45} />
-
       {/* torn top edge for footer */}
       <div className="absolute top-0 left-0 right-0 h-4 paper-torn-top" style={{ background: "var(--p-bg)" }} />
 

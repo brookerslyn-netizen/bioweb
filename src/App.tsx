@@ -21,14 +21,8 @@ import {
   BerryFollower,
   Splash,
   StickyNoteBar,
-  Doodle,
   useKonami,
   useClickConfetti,
-  ScatteredPolaroids,
-  FallingPaperScraps,
-  ScrapbookStamp,
-  BinderClip,
-  CoffeeStain,
   useNameSurprise,
 } from "./components/parts";
 import {
@@ -343,28 +337,7 @@ function App() {
         />
       )}
 
-      {/* scattered scrapbook decorations */}
-      <ScatteredPolaroids />
-      <FallingPaperScraps />
 
-      {/* stamps */}
-      <ScrapbookStamp top="15%" left="85%" rotate={-12} kind="circle" />
-      <ScrapbookStamp top="55%" left="2%" rotate={8} kind="postage" />
-      <ScrapbookStamp top="82%" left="88%" rotate={-20} kind="airmail" />
-
-      {/* binder clips */}
-      <BinderClip top="20%" left="4%" rotate={-8} />
-      <BinderClip top="70%" left="92%" rotate={15} />
-
-      {/* coffee stains */}
-      <CoffeeStain top="30%" left="80%" size={90} />
-      <CoffeeStain top="65%" left="8%" size={70} />
-
-      {/* scattered doodles */}
-      <Doodle kind="star" top="92%" left="6%" size={36} rotate={-10} />
-      <Doodle kind="heart" top="88%" left="92%" size={32} rotate={20} />
-      <Doodle kind="flower" top="12%" left="4%" size={40} rotate={15} />
-      <Doodle kind="flower" top="50%" left="94%" size={30} rotate={-25} />
 
       {/* @keyframes for marquee + blink (used by Typewriter cursor) */}
       <style>{`
