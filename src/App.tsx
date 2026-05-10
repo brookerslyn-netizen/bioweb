@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, X, ChevronDown, Music2 } from "lucide-react";
+import { Pencil, ChevronUp, Music2 } from "lucide-react";
 import "./App.css";
 import bgGif from "./assets/bg/dreamy.gif";
 
@@ -398,9 +398,9 @@ export default App;
 
 /* ===================== MusicDock =====================
  * Floating collapsible wrapper for the persistent MusicPlayer. The player
- * itself always stays mounted (so playback survives view switches + keeps
- * going while minimized). When minimized we just hide the expanded UI and
- * show a small round toggle in the corner.
+ * always stays mounted (so playback survives view switches + keeps going while
+ * minimized). When minimized, the card slides down leaving just a small pull-
+ * tab at the bottom of the viewport with an upward chevron.
  *
  * State is persisted to localStorage so the user's preference sticks.
  */
@@ -415,48 +415,54 @@ function MusicDock({ children }: { children: React.ReactNode }) {
   }, [minimized]);
 
   return (
-    <>
-      {/* Expanded dock — centered at the bottom, hidden while minimized. */}
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-[45] w-[min(92vw,640px)] pointer-events-none"
+      style={{ bottom: 0 }}
+    >
+      {/* Dock panel — slides down when minimized so only the tab on top remains. */}
       <div
-        className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[45] w-[min(92vw,640px)] pointer-events-auto transition-all duration-300"
+        className="relative pointer-events-auto transition-transform duration-300 ease-out"
         style={{
-          opacity: minimized ? 0 : 1,
-          transform: minimized
-            ? "translate(-50%, 120%) scale(0.9)"
-            : "translate(-50%, 0) scale(1)",
-          pointerEvents: minimized ? "none" : "auto",
+          // when minimized, translate the whole card below the fold, leaving the
+          // tab (absolutely positioned, outside this translate) visible.
+          transform: minimized ? "translateY(calc(100% - 0px))" : "translateY(-12px)",
+          willChange: "transform",
         }}
-        aria-hidden={minimized}
       >
-        <div className="relative">
-          {children}
-          {/* collapse button — only visible when expanded */}
-          <button
-            onClick={() => setMinimized(true)}
-            aria-label="minimize music player"
-            title="hide player"
-            className="absolute top-1 right-1 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform"
-            style={{ background: "var(--p-surface-strong)", color: "var(--p-text)" }}
-          >
-            <X size={14} />
-          </button>
-        </div>
-      </div>
+        {/* Pull tab sits on top of the card and stays poking out of the screen
+            when the card slides down. Clicking it toggles state. */}
+        <button
+          onClick={() => setMinimized((m) => !m)}
+          aria-label={minimized ? "show music player" : "hide music player"}
+          title={minimized ? "pull up" : "hide"}
+          className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 px-4 py-1 shadow-md hover:scale-[1.04] active:scale-95 transition-transform"
+          style={{
+            // sit just above the card's top edge so it reads as a physical tab
+            top: -18,
+            height: 22,
+            minWidth: 72,
+            borderRadius: "10px 10px 0 0",
+            background: "var(--p-surface-strong)",
+            color: "var(--p-text)",
+            border: "1px solid rgba(0,0,0,0.12)",
+            borderBottom: "none",
+            fontFamily: "'Shadows Into Light', cursive",
+            fontSize: 13,
+            lineHeight: 1,
+          }}
+        >
+          <Music2 size={12} />
+          <ChevronUp
+            size={14}
+            style={{
+              transition: "transform 250ms ease",
+              transform: minimized ? "rotate(0deg)" : "rotate(180deg)",
+            }}
+          />
+        </button>
 
-      {/* Compact dock toggle — always rendered so the user can bring the player back */}
-      <button
-        onClick={() => setMinimized((m) => !m)}
-        aria-label={minimized ? "show music player" : "minimize music player"}
-        title={minimized ? "show player" : "hide player"}
-        className="fixed bottom-3 right-3 z-[46] w-11 h-11 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-        style={{
-          background: "var(--p-accent)",
-          color: "var(--p-accent-contrast)",
-          opacity: minimized ? 1 : 0.85,
-        }}
-      >
-        {minimized ? <Music2 size={18} /> : <ChevronDown size={18} />}
-      </button>
-    </>
+        {children}
+      </div>
+    </div>
   );
 }
