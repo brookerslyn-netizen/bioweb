@@ -157,6 +157,7 @@ export function NowSection({ config }: { config: AppConfig }) {
 /* ===================== Connections (Discord + Spotify + Email + Recents) ===================== */
 
 import { SpotifyRecent } from "./SpotifyRecent";
+import { LastFmWidget } from "./LastFmWidget";
 
 export function ConnectionsSection({ config, apiBase }: { config: AppConfig; apiBase?: string }) {
   const lan = useLanyard(config.contact.discordId);
@@ -186,7 +187,13 @@ export function ConnectionsSection({ config, apiBase }: { config: AppConfig; api
   );
 }
 
-/* ===================== Recent things ===================== */
+/* ===================== Last.fm ===================== */
+
+export function LastFmSection({ config }: { config: AppConfig }) {
+  const username = config.contact.lastfmUsername;
+  if (!username) return null;
+  return <LastFmWidget username={username} />;
+}
 
 export function RecentSection({ config }: { config: AppConfig }) {
   if (config.recent.length === 0) return null;

@@ -8,6 +8,7 @@ export type SectionKey =
   | "about"
   | "now"
   | "connections"
+  | "lastfm"
   | "recent"
   | "favorites"
   | "guestbook"
@@ -23,6 +24,8 @@ export type StickerItem = { id: string; emoji: string; label: string; imageUrl?:
 export type RecentItem = { id: string; emoji: string; text: string; imageUrl?: string };
 export type StuffItem = { emoji: string; title: string; blurb: string; tag: string; url?: string };
 export type YTTrack = { id: string; title: string; artist?: string };
+export type PortfolioProject = { id: string; title: string; blurb: string; tag: string; url?: string; imageUrl?: string; emoji: string };
+export type GuitarCover = { id: string; title: string; youtubeId: string; note?: string };
 
 export type AppConfig = {
   paletteId: string;
@@ -58,6 +61,7 @@ export type AppConfig = {
     showCopyDiscord: boolean;
     spotifyUrl: string;
     steamId: string;
+    lastfmUsername?: string;
   };
 
   music: {
@@ -81,6 +85,8 @@ export type AppConfig = {
   recent: RecentItem[];
   stuffIMade: StuffItem[];
   comments: CommentEntry[];
+  portfolio: PortfolioProject[];
+  guitarCovers: GuitarCover[];
 
   stickyNote: {
     enabled: boolean;
@@ -186,6 +192,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   recent: [],
   stuffIMade: [],
   comments: [],
+  portfolio: [],
+  guitarCovers: [],
 
   stickyNote: {
     enabled: false,
@@ -296,6 +304,8 @@ export function mergeConfig(base: AppConfig, override: Partial<AppConfig>): AppC
     recent: override.recent ?? base.recent,
     stuffIMade: override.stuffIMade ?? base.stuffIMade,
     comments: override.comments ?? base.comments,
+    portfolio: override.portfolio ?? base.portfolio,
+    guitarCovers: override.guitarCovers ?? base.guitarCovers,
     sectionOrder: override.sectionOrder ?? base.sectionOrder,
   };
 }

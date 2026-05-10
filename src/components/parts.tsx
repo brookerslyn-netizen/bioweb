@@ -176,7 +176,7 @@ export function Typewriter({ lines }: { lines: string[] }) {
   );
 }
 
-/* ===================== Splash (paper tear to enter) ===================== */
+/* ===================== Splash (page rip to enter) ===================== */
 
 export function Splash({ onEnter, leaving, name, splashText }: {
   onEnter: () => void;
@@ -187,15 +187,15 @@ export function Splash({ onEnter, leaving, name, splashText }: {
   return (
     <div
       onClick={onEnter}
-      className={`fixed inset-0 z-50 cursor-pointer flex flex-col items-center justify-center text-center px-6 ${leaving ? "splash-leaving" : ""}`}
+      className="fixed inset-0 z-50 cursor-pointer flex flex-col items-center justify-center text-center px-6"
     >
       <div className="absolute inset-0 -z-10 palette-veil" />
       <div className="absolute inset-0 -z-20 palette-bg" />
 
-      {/* top tear strip */}
-      <div className={`splash-tear splash-tear-top ${leaving ? "splash-tear-top-out" : ""}`} />
-      {/* bottom tear strip */}
-      <div className={`splash-tear splash-tear-bottom ${leaving ? "splash-tear-bottom-out" : ""}`} />
+      {/* top half rips upward */}
+      <div className={`splash-rip-top ${leaving ? "splash-rip-top-out" : ""}`} />
+      {/* bottom half rips downward */}
+      <div className={`splash-rip-bottom ${leaving ? "splash-rip-bottom-out" : ""}`} />
 
       <div className={`splash-content ${leaving ? "splash-content-out" : ""}`}>
         <RansomNote

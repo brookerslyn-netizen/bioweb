@@ -47,41 +47,56 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity 700ms ease, transform 700ms cubic-bezier(.2,.8,.2,1); }
 .reveal.is-visible { opacity: 1; transform: translateY(0); }
 
-/* ===== splash transition — paper tear ===== */
-.splash-content { transition: opacity 400ms ease, transform 400ms ease; }
-.splash-content-out { opacity: 0; transform: scale(0.97); }
+/* ===== splash transition — page rip ===== */
+.splash-content { transition: opacity 300ms ease 100ms, transform 300ms ease 100ms; }
+.splash-content-out { opacity: 0; transform: scale(1.03) translateY(-6px); pointer-events: none; }
 
-/* paper strips that tear away top and bottom */
-.splash-tear {
+/* two halves of the page that rip apart */
+.splash-rip-top,
+.splash-rip-bottom {
   position: absolute;
-  left: -2%;
-  width: 104%;
-  height: 80px;
+  left: -5%;
+  width: 110%;
   pointer-events: none;
-  z-index: 10;
+  z-index: 20;
   background: var(--paper-cream);
-  transition: transform 550ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 600ms cubic-bezier(0.55, 0, 0.45, 1),
+              opacity 600ms ease;
 }
 
-/* torn edge on the inner side using SVG mask */
-.splash-tear-top {
-  top: 0;
-  transform: translateY(0);
-  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='80' preserveAspectRatio='none'><path fill='black' d='M0 0 L800 0 L800 58 C760 70, 720 50, 680 62 C640 74, 600 52, 560 64 C520 76, 480 54, 440 66 C400 78, 360 56, 320 64 C280 72, 240 52, 200 62 C160 72, 120 50, 80 60 C40 70, 20 54, 0 62 Z'/></svg>");
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='80' preserveAspectRatio='none'><path fill='black' d='M0 0 L800 0 L800 58 C760 70, 720 50, 680 62 C640 74, 600 52, 560 64 C520 76, 480 54, 440 66 C400 78, 360 56, 320 64 C280 72, 240 52, 200 62 C160 72, 120 50, 80 60 C40 70, 20 54, 0 62 Z'/></svg>");
+.splash-rip-top {
+  top: -5%;
+  height: 55%;
+  transform-origin: top center;
+  transform: translateY(0) rotate(0deg);
+  /* jagged bottom edge */
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 0 L1000 0 L1000 340 C980 355, 960 330, 940 348 C920 365, 900 338, 880 352 C860 366, 840 335, 820 350 C800 365, 780 340, 760 355 C740 370, 720 342, 700 358 C680 374, 660 345, 640 360 C620 375, 600 348, 580 362 C560 376, 540 350, 520 365 C500 380, 480 352, 460 368 C440 384, 420 355, 400 370 C380 385, 360 358, 340 372 C320 386, 300 360, 280 374 C260 388, 240 362, 220 376 C200 390, 180 364, 160 378 C140 392, 120 366, 100 380 C80 394, 60 368, 40 382 C20 396, 10 372, 0 378 Z'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 0 L1000 0 L1000 340 C980 355, 960 330, 940 348 C920 365, 900 338, 880 352 C860 366, 840 335, 820 350 C800 365, 780 340, 760 355 C740 370, 720 342, 700 358 C680 374, 660 345, 640 360 C620 375, 600 348, 580 362 C560 376, 540 350, 520 365 C500 380, 480 352, 460 368 C440 384, 420 355, 400 370 C380 385, 360 358, 340 372 C320 386, 300 360, 280 374 C260 388, 240 362, 220 376 C200 390, 180 364, 160 378 C140 392, 120 366, 100 380 C80 394, 60 368, 40 382 C20 396, 10 372, 0 378 Z'/></svg>");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
-.splash-tear-bottom {
-  bottom: 0;
-  transform: translateY(0);
-  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='80' preserveAspectRatio='none'><path fill='black' d='M0 22 C40 10, 80 30, 120 18 C160 6, 200 26, 240 16 C280 6, 320 24, 360 14 C400 4, 440 22, 480 12 C520 2, 560 20, 600 10 C640 0, 680 18, 720 8 C760 -2, 780 14, 800 10 L800 80 L0 80 Z'/></svg>");
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='80' preserveAspectRatio='none'><path fill='black' d='M0 22 C40 10, 80 30, 120 18 C160 6, 200 26, 240 16 C280 6, 320 24, 360 14 C400 4, 440 22, 480 12 C520 2, 560 20, 600 10 C640 0, 680 18, 720 8 C760 -2, 780 14, 800 10 L800 80 L0 80 Z'/></svg>");
+
+.splash-rip-bottom {
+  bottom: -5%;
+  height: 55%;
+  transform-origin: bottom center;
+  transform: translateY(0) rotate(0deg);
+  /* jagged top edge */
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 60 C20 44, 40 68, 60 52 C80 36, 100 58, 120 44 C140 30, 160 54, 180 40 C200 26, 220 50, 240 36 C260 22, 280 46, 300 32 C320 18, 340 42, 360 28 C380 14, 400 38, 420 24 C440 10, 460 34, 480 20 C500 6, 520 30, 540 16 C560 2, 580 26, 600 12 C620 -2, 640 22, 660 8 C680 -6, 700 18, 720 4 C740 -10, 760 14, 780 0 C800 -14, 820 10, 840 -4 C860 -18, 880 6, 900 -8 C920 -22, 940 2, 960 -12 C980 -26, 990 -4, 1000 -10 L1000 400 L0 400 Z'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='400' preserveAspectRatio='none'><path fill='black' d='M0 60 C20 44, 40 68, 60 52 C80 36, 100 58, 120 44 C140 30, 160 54, 180 40 C200 26, 220 50, 240 36 C260 22, 280 46, 300 32 C320 18, 340 42, 360 28 C380 14, 400 38, 420 24 C440 10, 460 34, 480 20 C500 6, 520 30, 540 16 C560 2, 580 26, 600 12 C620 -2, 640 22, 660 8 C680 -6, 700 18, 720 4 C740 -10, 760 14, 780 0 C800 -14, 820 10, 840 -4 C860 -18, 880 6, 900 -8 C920 -22, 940 2, 960 -12 C980 -26, 990 -4, 1000 -10 L1000 400 L0 400 Z'/></svg>");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
-.splash-tear-top-out  { transform: translateY(-100%) rotate(-1deg); }
-.splash-tear-bottom-out { transform: translateY(100%) rotate(1deg); }
+
+/* rip out animations */
+.splash-rip-top-out {
+  transform: translateY(-110%) rotate(-4deg);
+  opacity: 0;
+}
+.splash-rip-bottom-out {
+  transform: translateY(110%) rotate(4deg);
+  opacity: 0;
+}
 
 /* ===== tilt cards (admin-only drag in v5; for now: hover-tilt) ===== */
 .tilt-card { transition: transform 220ms ease, box-shadow 220ms ease; transform-style: preserve-3d; }

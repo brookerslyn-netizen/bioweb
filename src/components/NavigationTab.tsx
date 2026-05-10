@@ -1,106 +1,50 @@
-import { useState } from "react";
-import { X, MessageSquare, Home } from "lucide-react";
-import { Doodle } from "./parts";
+import { Home, MessageSquare, Briefcase } from "lucide-react";
 
-type View = "main" | "comments";
+export type View = "main" | "comments" | "portfolio";
 
-export function NavigationTab({ currentView, onViewChange }: { 
-  currentView: View; 
+const TABS: { view: View; icon: React.ReactNode; label: string }[] = [
+  { view: "main",      icon: <Home size={18} />,        label: "home" },
+  { view: "portfolio", icon: <Briefcase size={18} />,   label: "portfolio" },
+  { view: "comments",  icon: <MessageSquare size={18} />, label: "notes" },
+];
+
+export function NavigationTab({
+  currentView,
+  onViewChange,
+}: {
+  currentView: View;
   onViewChange: (view: View) => void;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <>
-      {/* Navigation Tab */}
-      <div className="fixed top-1/2 left-4 -translate-y-1/2 z-[50]">
-        <button
-          onClick={() => {
-            if (currentView === "comments") {
-              onViewChange("main");
-            } else {
-              onViewChange("comments");
-            }
-          }}
-          className={`paper p-3 shadow-lg hover:scale-110 transition-transform ${
-            currentView === "comments" ? "palette-accent-bg" : ""
-          }`}
-          title={currentView === "comments" ? "back to main" : "comments"}
-        >
-          {currentView === "comments" ? <Home size={20} /> : <span className="text-xl font-bold">+</span>}
-        </button>
-      </div>
-
-      {/* Side Panel */}
-      <div className={`fixed top-0 left-0 h-full w-80 palette-surface-strong shadow-2xl z-[40] transition-transform duration-300 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="p-6 h-full overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="paper-text text-2xl" style={{ fontFamily: "'Shadows Into Light', cursive" }}>
-              navigation
-            </h3>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="paper p-2 hover:scale-110 transition-transform"
+    <div className="fixed top-1/2 left-3 -translate-y-1/2 z-[50] flex flex-col gap-2">
+      {TABS.map(({ view, icon, label }) => {
+        const active = currentView === view;
+        return (
+          <button
+            key={view}
+            onClick={() => onViewChange(view)}
+            title={label}
+            className="group relative flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:scale-110"
+            style={{
+              background: active ? "var(--p-accent)" : "var(--paper-cream)",
+              color: active ? "var(--p-accent-contrast)" : "var(--paper-ink-soft)",
+              boxShadow: active
+                ? "0 4px 14px rgba(0,0,0,0.35)"
+                : "0 2px 8px rgba(0,0,0,0.25)",
+              border: active ? "none" : "1px solid rgba(0,0,0,0.1)",
+            }}
+          >
+            {icon}
+            {/* tooltip */}
+            <span
+              className="absolute left-12 px-2 py-1 rounded text-xs font-mono uppercase tracking-widest whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ background: "var(--paper-cream)", color: "var(--paper-ink)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}
             >
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* Navigation Options */}
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                onViewChange("main");
-                setIsOpen(false);
-              }}
-              className={`w-full paper p-4 text-left transition-all hover:scale-[1.02] ${
-                currentView === "main" ? "palette-accent-bg" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Home size={18} />
-                <div>
-                  <div className="font-bold paper-text">main page</div>
-                  <div className="text-sm paper-text-muted">about, favorites, projects</div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => {
-                onViewChange("comments");
-                setIsOpen(false);
-              }}
-              className={`w-full paper p-4 text-left transition-all hover:scale-[1.02] ${
-                currentView === "comments" ? "palette-accent-bg" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <MessageSquare size={18} />
-                <div>
-                  <div className="font-bold paper-text">comments</div>
-                  <div className="text-sm paper-text-muted">leave a message</div>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Decorative Doodles */}
-          <Doodle kind="star" top="20%" left="85%" size={24} rotate={15} />
-          <Doodle kind="swirl" top="75%" left="80%" size={32} rotate={-20} />
-        </div>
-      </div>
-
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-[30]"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-    </>
+              {label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }

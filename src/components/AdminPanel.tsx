@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import type {
   AppConfig, SectionKey, FavoritesItem, GuestbookEntry, StickerItem,
-  RecentItem, StuffItem, YTTrack,
+  RecentItem, StuffItem, YTTrack, PortfolioProject, GuitarCover,
 } from "../lib/config";
 import { uid, popHistory, clearHistory, pushHistory, mergeConfig, DEFAULT_CONFIG } from "../lib/config";
 import type { CustomPalette } from "../lib/palettes";
@@ -246,6 +246,8 @@ export function AdminPanel({
             onChange={(e) => set((c) => ({ ...c, contact: { ...c.contact, spotifyUrl: e.target.value } }))} /></Field>
           <Field label="steam id (numeric)"><input className={inputCls} value={config.contact.steamId}
             onChange={(e) => set((c) => ({ ...c, contact: { ...c.contact, steamId: e.target.value } }))} placeholder="76561198…" /></Field>
+          <Field label="last.fm username"><input className={inputCls} value={config.contact.lastfmUsername || ""}
+            onChange={(e) => set((c) => ({ ...c, contact: { ...c.contact, lastfmUsername: e.target.value } }))} placeholder="your lastfm username" /></Field>
           <div className="flex gap-3 text-sm palette-text flex-wrap">
             <label className="flex items-center gap-1"><input type="checkbox" checked={config.contact.showEmail}
               onChange={(e) => set((c) => ({ ...c, contact: { ...c.contact, showEmail: e.target.checked } }))} /> show email</label>
@@ -298,6 +300,12 @@ export function AdminPanel({
 
           {/* ===== stuff i made ===== */}
           <StuffEditor config={config} set={set} />
+
+          {/* ===== portfolio ===== */}
+          <PortfolioEditor config={config} set={set} />
+
+          {/* ===== guitar covers ===== */}
+          <CoversEditor config={config} set={set} />
 
           {/* ===== marquee ===== */}
           <H>marquee</H>

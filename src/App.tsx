@@ -38,10 +38,12 @@ import {
   SteamSection,
   StuffIMadeSection,
   FooterSection,
+  LastFmSection,
 } from "./components/sections";
 import { AdminPanel } from "./components/AdminPanel";
-import { NavigationTab } from "./components/NavigationTab";
+import { NavigationTab, type View } from "./components/NavigationTab";
 import { CommentsSection } from "./components/CommentsSection";
+import { PortfolioPage } from "./components/PortfolioPage";
 
 function App() {
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -54,7 +56,7 @@ function App() {
     () => sessionStorage.getItem("brook-sticky-dismissed") === "1",
   );
   const [berryOn, setBerryOn] = useState(false);
-  const [currentView, setCurrentView] = useState<"main" | "comments">("main");
+  const [currentView, setCurrentView] = useState<View>("main");
   const initialAuthRan = useRef(false);
 
   /* === load config on mount === */
@@ -219,6 +221,8 @@ function App() {
         return <NowSection key="now" config={config} />;
       case "connections":
         return <ConnectionsSection key="connections" config={config} apiBase={API_BASE} />;
+      case "lastfm":
+        return <LastFmSection key="lastfm" config={config} />;
       case "recent":
         return <RecentSection key="recent" config={config} />;
       case "favorites":
@@ -301,6 +305,12 @@ function App() {
       {/* sections */}
       <main className="relative z-[1]">
         {entered && currentView === "main" && config?.sectionOrder.map((s) => renderSection(s))}
+        {entered && currentView === "portfolio" && (
+          <PortfolioPage
+            projects={config?.portfolio || []}
+            covers={config?.guitarCovers || []}
+          />
+        )}
         {entered && currentView === "comments" && (
           <CommentsSection 
             comments={config?.comments || []} 
