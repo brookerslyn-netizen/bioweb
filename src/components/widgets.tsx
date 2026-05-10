@@ -441,6 +441,8 @@ export function MusicPlayer({
   const pct = dur > 0 ? Math.min(100, (now / dur) * 100) : 0;
   const displayTitle = externalTrack ? externalTrack.title : cur.title;
   const displayArtist = externalTrack ? externalTrack.artist : cur.artist;
+  // YouTube thumbnail for album art on the visual
+  const thumbUrl = cur.id ? `https://img.youtube.com/vi/${cur.id}/mqdefault.jpg` : null;
 
   return (
     <div className="rounded-2xl p-4 paper paper-text relative">
@@ -448,27 +450,49 @@ export function MusicPlayer({
       <div ref={containerRef} style={{ position: "absolute", left: -9999, top: -9999, opacity: 0 }} />
       <div className="flex items-center gap-4">
         {visual === "vinyl" && (
-          <div className="relative w-16 h-16 rounded-full" style={{ background: "radial-gradient(circle, #2b2316 30%, #0a0a0a 32%, #2b2316 33%, #0a0a0a 100%)" }}>
+          <div className="relative w-16 h-16 rounded-full flex-shrink-0 overflow-hidden"
+            style={{ background: "radial-gradient(circle, #2b2316 30%, #0a0a0a 32%, #2b2316 33%, #0a0a0a 100%)" }}>
+            {/* album art as vinyl label */}
+            {thumbUrl && (
+              <img
+                src={thumbUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover rounded-full opacity-60"
+                style={{ mixBlendMode: "luminosity" }}
+              />
+            )}
             <div className={`absolute inset-0 rounded-full ${playing ? "vinyl-spin" : ""}`}>
-              <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full palette-accent-bg" style={{ transform: "translate(-50%, -50%)" }} />
-              <div className="absolute inset-2 rounded-full" style={{ border: "1px solid rgba(255,255,255,0.08)" }} />
+              <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full palette-accent-bg" style={{ transform: "translate(-50%, -50%)", zIndex: 2 }} />
+              <div className="absolute inset-2 rounded-full" style={{ border: "1px solid rgba(255,255,255,0.12)" }} />
               <div className="absolute inset-4 rounded-full" style={{ border: "1px solid rgba(255,255,255,0.08)" }} />
             </div>
           </div>
         )}
         {visual === "cassette" && (
-          <div className="relative w-20 h-14 rounded-md" style={{ background: "#2b2316", border: "2px solid #5b4326" }}>
-            <div className="absolute top-1.5 left-1.5 right-1.5 h-3 rounded-sm" style={{ background: "#fff8a8" }} />
-            <div className={`absolute bottom-1.5 left-2 w-4 h-4 rounded-full ${playing ? "cassette-reel" : ""}`} style={{ background: "radial-gradient(circle, #888 30%, #2b2316 32%)" }}>
+          <div className="relative w-24 h-16 rounded-md flex-shrink-0 overflow-hidden"
+            style={{ background: "#2b2316", border: "2px solid #5b4326" }}>
+            {/* album art as cassette label */}
+            {thumbUrl && (
+              <img
+                src={thumbUrl}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-40"
+                style={{ mixBlendMode: "luminosity" }}
+              />
+            )}
+            <div className="absolute top-1.5 left-1.5 right-1.5 h-3 rounded-sm z-10" style={{ background: "rgba(255,248,168,0.85)" }} />
+            <div className={`absolute bottom-1.5 left-2 w-5 h-5 rounded-full z-10 ${playing ? "cassette-reel" : ""}`}
+              style={{ background: "radial-gradient(circle, #888 30%, #2b2316 32%)" }}>
               <div className="absolute inset-1 rounded-full" style={{ border: "1px solid #555" }} />
             </div>
-            <div className={`absolute bottom-1.5 right-2 w-4 h-4 rounded-full ${playing ? "cassette-reel" : ""}`} style={{ background: "radial-gradient(circle, #888 30%, #2b2316 32%)" }}>
+            <div className={`absolute bottom-1.5 right-2 w-5 h-5 rounded-full z-10 ${playing ? "cassette-reel" : ""}`}
+              style={{ background: "radial-gradient(circle, #888 30%, #2b2316 32%)" }}>
               <div className="absolute inset-1 rounded-full" style={{ border: "1px solid #555" }} />
             </div>
           </div>
         )}
         {visual === "none" && (
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center palette-accent-bg">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center palette-accent-bg flex-shrink-0">
             <Music2 size={22} />
           </div>
         )}

@@ -11,21 +11,22 @@
 
 body.no-cursor, body.no-cursor * { cursor: none !important; }
 
-/* ===== custom pencil cursor (palette-driven) ===== */
+/* ===== custom pen cursor (palette-driven) ===== */
 .cursor-pencil {
   position: fixed;
   top: 0;
   left: 0;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 35px;
   pointer-events: none;
   z-index: 9999;
-  transform: translate3d(-2px, -22px, 0);
-  transition: transform 90ms ease;
+  transform: translate3d(-3px, -28px, 0);
+  transition: transform 80ms ease;
   will-change: transform;
 }
 .cursor-pencil.is-hover {
-  transform: translate3d(-2px, -22px, 0) rotate(-12deg) scale(1.15);
+  transform: translate3d(-3px, -28px, 0) scale(1.12);
+  filter: drop-shadow(0 0 6px var(--p-cursor-glow));
 }
 
 /* ===== scrapbook strawberry that follows cursor (konami easter egg) ===== */

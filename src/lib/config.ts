@@ -18,7 +18,7 @@ export type SectionKey =
 
 export type FavoritesItem = { emoji: string; label: string; note: string; imageUrl?: string };
 export type GuestbookEntry = { id: string; name: string; message: string; date: string };
-export type CommentEntry = { id: string; name: string; message: string; timestamp: string };
+export type CommentEntry = { id: string; name: string; message: string; timestamp: string; hearts?: number };
 export type StickerItem = { id: string; emoji: string; label: string; imageUrl?: string };
 export type RecentItem = { id: string; emoji: string; text: string; imageUrl?: string };
 export type StuffItem = { emoji: string; title: string; blurb: string; tag: string; url?: string };

@@ -20,7 +20,7 @@ export function Reveal({ children, className = "" }: { children: ReactNode; clas
   return <div ref={ref} className={`reveal ${className}`}>{children}</div>;
 }
 
-/* ===================== Pencil Cursor ===================== */
+/* ===================== Pen Cursor ===================== */
 
 export function PencilCursor({ enabled }: { enabled: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +29,7 @@ export function PencilCursor({ enabled }: { enabled: boolean }) {
     const el = ref.current;
     if (!el) return;
     const onMove = (e: MouseEvent) => {
-      el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-2px, -22px)`;
+      el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-3px, -28px)`;
     };
     const onOver = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
@@ -48,16 +48,20 @@ export function PencilCursor({ enabled }: { enabled: boolean }) {
   if (!enabled) return null;
   return (
     <div ref={ref} className="cursor-pencil hidden md:block">
-      <svg viewBox="0 0 24 24" width="26" height="26" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.4))" }}>
-        {/* tip */}
-        <polygon points="2,22 6,18 7,21 5,23" fill="#1a1a1a" />
-        <polygon points="3.5,21.6 6,19 6.6,20.5" fill="#5b4326" />
-        {/* shaft */}
-        <polygon points="6,18 18,6 22,10 10,22" fill="var(--p-accent)" stroke="#1a1a1a" strokeWidth="0.5" />
-        {/* metal ferrule */}
-        <polygon points="18,6 19.5,4.5 23.5,8.5 22,10" fill="#c9c9c9" stroke="#1a1a1a" strokeWidth="0.5" />
-        {/* eraser */}
-        <polygon points="19.5,4.5 21,3 25,7 23.5,8.5" fill="#f5a9b8" stroke="#1a1a1a" strokeWidth="0.5" />
+      {/* fountain pen nib — tip points down-left at the hotspot */}
+      <svg viewBox="0 0 32 40" width="28" height="35" style={{ filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.45))" }}>
+        {/* barrel */}
+        <rect x="11" y="2" width="10" height="18" rx="5" fill="var(--p-accent)" stroke="#1a1a1a" strokeWidth="0.8" />
+        {/* clip */}
+        <rect x="19.5" y="3" width="2" height="16" rx="1" fill="#1a1a1a" opacity="0.5" />
+        {/* grip section */}
+        <rect x="10" y="18" width="12" height="7" rx="2" fill="#1a1a1a" opacity="0.75" />
+        {/* nib body */}
+        <path d="M13 25 L16 38 L19 25 Z" fill="#d4af37" stroke="#8a6a00" strokeWidth="0.6" />
+        {/* nib slit */}
+        <line x1="16" y1="27" x2="16" y2="37" stroke="#8a6a00" strokeWidth="0.7" opacity="0.8" />
+        {/* ink drop at tip */}
+        <circle cx="16" cy="38" r="1.2" fill="var(--p-accent)" opacity="0.9" />
       </svg>
     </div>
   );

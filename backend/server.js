@@ -495,6 +495,22 @@ app.get('/api/spotify/recent', async (req, res) => {
   }
 });
 
+// POST heart on a comment
+app.post('/api/comments/:id/heart', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const config = await readConfig();
+    const idx = config.comments.findIndex(c => c.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Comment not found' });
+    config.comments[idx].hearts = (config.comments[idx].hearts || 0) + 1;
+    await writeConfig(config);
+    res.json({ success: true, hearts: config.comments[idx].hearts });
+  } catch (error) {
+    console.error('Error hearting comment:', error);
+    res.status(500).json({ error: 'Failed to heart comment' });
+  }
+});
+
 // YouTube search endpoint
 app.get('/api/youtube/search', async (req, res) => {
   const query = req.query.q;
