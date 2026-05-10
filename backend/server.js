@@ -637,8 +637,27 @@ app.get('/api/moderation/blocked', requireAdmin, (req, res) => {
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  // Surface the actual data directory and whether the files are present on disk
+  // so we can tell at a glance whether persistent storage is working on Railway.
+  let configExists = false;
+  let commentsExists = false;
+  let configSize = 0;
+  let commentsSize = 0;
+  try { const s = await fs.stat(CONFIG_FILE);   configExists = true;   configSize = s.size; } catch { /* missing */ }
+  try { const s = await fs.stat(COMMENTS_FILE); commentsExists = true; commentsSize = s.size; } catch { /* missing */ }
+
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    dataDir: DATA_DIR,
+    persistent: Boolean(process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR),
+    railwayVolumeMountPath: process.env.RAILWAY_VOLUME_MOUNT_PATH || null,
+    files: {
+      config: { exists: configExists, bytes: configSize, path: CONFIG_FILE },
+      comments: { exists: commentsExists, bytes: commentsSize, path: COMMENTS_FILE },
+    },
+  });
 });
 
 const HOST = '0.0.0.0';
