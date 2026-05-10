@@ -1,16 +1,26 @@
-import { useState } from "react";
-import { ExternalLink, Guitar, Folder } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ExternalLink, Guitar, Folder, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Reveal, Doodle } from "./parts";
 import type { PortfolioProject, GuitarCover } from "../lib/config";
+
+const PLAY_YT_TRACK_EVENT = "play-yt-track";
 
 /* ── YouTube embed ── */
 function YTEmbed({ videoId, title }: { videoId: string; title: string }) {
   const [loaded, setLoaded] = useState(false);
+
+  // When the user triggers a cover, pause the persistent music player so two
+  // audio sources don't fight for ears.
+  const load = () => {
+    window.dispatchEvent(new CustomEvent(PLAY_YT_TRACK_EVENT, { detail: null }));
+    setLoaded(true);
+  };
+
   return (
     <div className="relative w-full rounded overflow-hidden" style={{ paddingBottom: "56.25%", background: "#1a1a1a" }}>
       {!loaded && (
         <button
-          onClick={() => setLoaded(true)}
+          onClick={load}
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 group"
           style={{ background: "#1a1a1a" }}
         >
@@ -93,32 +103,147 @@ function ProjectCard({ project, index }: { project: PortfolioProject; index: num
 
 /* ── Audio cover player (used when no youtubeId is provided) ── */
 function AudioCover({ cover }: { cover: GuitarCover }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [progress, setProgress] = useState(0); // 0..1
+  const [duration, setDuration] = useState(0);
+  const [current, setCurrent] = useState(0);
+
+  // keep local state in sync with the audio element
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onTime = () => {
+      setCurrent(a.currentTime);
+      if (a.duration && !isNaN(a.duration)) setProgress(a.currentTime / a.duration);
+    };
+    const onMeta = () => setDuration(a.duration || 0);
+    const onEnded = () => { setPlaying(false); setProgress(0); setCurrent(0); };
+    a.addEventListener("play", onPlay);
+    a.addEventListener("pause", onPause);
+    a.addEventListener("timeupdate", onTime);
+    a.addEventListener("loadedmetadata", onMeta);
+    a.addEventListener("ended", onEnded);
+    return () => {
+      a.removeEventListener("play", onPlay);
+      a.removeEventListener("pause", onPause);
+      a.removeEventListener("timeupdate", onTime);
+      a.removeEventListener("loadedmetadata", onMeta);
+      a.removeEventListener("ended", onEnded);
+    };
+  }, []);
+
+  // if the main music player takes over (another track starts somewhere),
+  // pause this audio cover so two sources aren't playing at once.
+  useEffect(() => {
+    const pauseIfPlaying = () => { audioRef.current?.pause(); };
+    window.addEventListener("play-yt-track", pauseIfPlaying);
+    return () => window.removeEventListener("play-yt-track", pauseIfPlaying);
+  }, []);
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (a.paused) {
+      // silence the persistent music dock before starting this cover
+      window.dispatchEvent(new CustomEvent(PLAY_YT_TRACK_EVENT, { detail: null }));
+      a.play().catch(() => { /* autoplay blocked */ });
+    } else {
+      a.pause();
+    }
+  };
+
+  const toggleMute = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.muted = !a.muted;
+    setMuted(a.muted);
+  };
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const a = audioRef.current;
+    if (!a || !a.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    a.currentTime = pct * a.duration;
+  };
+
+  const fmt = (t: number) => {
+    if (!t || isNaN(t)) return "0:00";
+    const m = Math.floor(t / 60);
+    const s = Math.floor(t % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const img = cover.coverImage;
+
   return (
-    <div className="relative w-full rounded overflow-hidden" style={{
-      background: "linear-gradient(135deg, var(--p-surface-strong, #2a1f3d) 0%, var(--p-surface, #1a1230) 100%)",
-      paddingBottom: "56.25%",
-    }}>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4">
-        {cover.coverImage ? (
-          <img
-            src={cover.coverImage}
-            alt={cover.title}
-            className="w-24 h-24 rounded shadow-lg object-cover"
-            style={{ transform: "rotate(-2deg)" }}
-            onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-        ) : (
-          <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "var(--p-accent)" }}>
-            <Guitar size={36} color="var(--p-accent-contrast)" />
+    <div
+      className="relative w-full rounded overflow-hidden"
+      style={{
+        paddingBottom: "56.25%",
+        background: img
+          ? `linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%), url("${img}") center/cover no-repeat`
+          : "linear-gradient(135deg, var(--p-surface-strong, #2a1f3d) 0%, var(--p-surface, #1a1230) 100%)",
+      }}
+    >
+      {/* fallback center icon when there's no cover image */}
+      {!img && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "var(--p-accent)" }}>
+            <Guitar size={34} color="var(--p-accent-contrast)" />
           </div>
-        )}
-        <audio
-          controls
-          preload="none"
-          src={cover.audioUrl}
-          className="w-full max-w-xs"
-          style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.4))" }}
-        />
+        </div>
+      )}
+
+      {/* hidden native audio element — we drive it via custom controls */}
+      <audio ref={audioRef} src={cover.audioUrl} preload="metadata" />
+
+      {/* compact control bar pinned to the bottom of the 16:9 frame */}
+      <div
+        className="absolute left-0 right-0 bottom-0 flex items-center gap-2 px-3 py-2"
+        style={{ color: "#fff" }}
+      >
+        <button
+          onClick={toggle}
+          aria-label={playing ? "pause" : "play"}
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
+          style={{ background: "var(--p-accent)", color: "var(--p-accent-contrast)" }}
+        >
+          {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+        </button>
+
+        <span className="font-mono text-[11px] tabular-nums" style={{ opacity: 0.85 }}>
+          {fmt(current)}
+        </span>
+
+        {/* progress bar — click to seek */}
+        <div
+          className="flex-1 h-1.5 rounded-full cursor-pointer group"
+          onClick={seek}
+          style={{ background: "rgba(255,255,255,0.25)" }}
+        >
+          <div
+            className="h-full rounded-full group-hover:brightness-110 transition"
+            style={{ width: `${progress * 100}%`, background: "var(--p-accent)" }}
+          />
+        </div>
+
+        <span className="font-mono text-[11px] tabular-nums" style={{ opacity: 0.6 }}>
+          {fmt(duration)}
+        </span>
+
+        <button
+          onClick={toggleMute}
+          aria-label={muted ? "unmute" : "mute"}
+          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+          style={{ color: "#fff" }}
+        >
+          {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+        </button>
       </div>
     </div>
   );
