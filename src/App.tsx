@@ -9,7 +9,7 @@ import {
   customPaletteToVars,
   BUILTIN_PALETTES,
 } from "./lib/palettes";
-import { loadConfig, saveConfig, pushHistory, checkAdminAuth, logoutAdmin, getAdminKey, type AppConfig, type SectionKey, } from "./lib/config";
+import { loadConfig, saveConfig, pushHistory, checkAdminAuth, logoutAdmin, getAdminKey, DEFAULT_CONFIG, type AppConfig, type SectionKey, } from "./lib/config";
 
 const API_BASE = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD 
@@ -67,25 +67,8 @@ function App() {
         setConfig(loadedConfig);
       } catch (error) {
         console.error('Failed to load config:', error);
-        // Fallback to a basic config
-        setConfig({
-          paletteId: "diary",
-          customPalettes: [],
-          bgUrl: "",
-          hero: { name: "brook", handle: "@brookerslyn", subtitle: "chronically dumb", typingLinesText: "touch grass\neat grass", scrollHint: "scroll for screamers", splashText: "click to steal your data", showSparkles: false },
-          about: { title: "about me", body: "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us", tagsText: "ass sleep schedule, true idiot, sucks at guitar", age: "16", timezone: "GMT+5", showAge: true, showTimezone: true },
-          nowListText: "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk",
-          contact: { email: "brookerslyn@gmail.com", showEmail: true, discordId: "647814047210930223", showCopyDiscord: true, spotifyUrl: "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f", steamId: "" },
-          music: { enabled: true, volume: 50, autoplay: true, visual: "vinyl", crackle: true, playlist: [{ id: "3IpM7RK0GeY", title: "track 1" }] },
-          favorites: { games: [{ emoji: "🍓", label: "celeste", note: "still on farewell" }], music: [{ emoji: "🎸", label: "edit me", note: "from the admin panel" }], movies: [{ emoji: "🎬", label: "edit me", note: "from the admin panel" }], food: [{ emoji: "🍜", label: "edit me", note: "from the admin panel" }] },
-          guestbook: [], stickers: [], recent: [], comments: [],
-          portfolio: [], guitarCovers: [],
-          stickyNote: { enabled: false, text: "edit this note from the admin panel" },
-          marqueeText: "touch grass • eat grass • git gud",
-          footer: { headline: "see ya", sub: "", bottom: "", transFlairText: "TRANS PEOPLE CAN DOUBLE JUMP", showTransFlair: true },
-          features: { cursor: true, hearts: false, sparkles: false, marquee: true, music: true, transFlair: true, paperGrain: true, confetti: true, konami: true, polaroidFlip: true, spotify: true },
-          sectionOrder: ["hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "footer"]
-        });
+        // Fallback to the baked-in default when the API is unreachable.
+        setConfig(DEFAULT_CONFIG);
       } finally {
         setLoading(false);
       }
@@ -113,14 +96,54 @@ function App() {
     }
   }, [config?.paletteId, config?.customPalettes]);
 
-  /* === persist config === */
+  /* === persist config === only admins save to the API, so random visitors
+     can't round-trip a stale config back to the server and clobber live data
+     (comments, for example). Non-admins still get a localStorage cache. */
   useEffect(() => {
-    if (config) {
+    if (!config) return;
+    if (isAdmin) {
       saveConfig(config).catch(error => {
         console.error('Failed to save config:', error);
       });
+    } else {
+      try { localStorage.setItem("brook-config", JSON.stringify(config)); } catch { /* ignore */ }
     }
-  }, [config]);
+  }, [config, isAdmin]);
+
+  /* === periodic refresh of comments so new posts appear without a reload === */
+  useEffect(() => {
+    if (!config) return;
+    let cancelled = false;
+
+    const refresh = async () => {
+      try {
+        // Prefer the lightweight endpoint; fall back to re-reading config if
+        // the deployed backend is older and doesn't expose /api/comments.
+        let comments: AppConfig["comments"] | null = null;
+        const r = await fetch(`${API_BASE}/comments`);
+        if (r.ok) {
+          const data = await r.json();
+          if (Array.isArray(data?.comments)) comments = data.comments;
+        } else {
+          const cr = await fetch(`${API_BASE}/config`);
+          if (cr.ok) {
+            const full = await cr.json();
+            if (Array.isArray(full?.comments)) comments = full.comments;
+          }
+        }
+        if (cancelled || !comments) return;
+        setConfig((c) => c && comments ? { ...c, comments } : c);
+      } catch { /* ignore */ }
+    };
+
+    // refresh when the user flips to the comments view + every 30s while it's open
+    if (currentView === "comments") {
+      refresh();
+      const iv = setInterval(refresh, 30_000);
+      return () => { cancelled = true; clearInterval(iv); };
+    }
+    return () => { cancelled = true; };
+  }, [currentView, config?.comments?.length]);
 
   /* === keyboard shortcut: ctrl+. opens admin (only if authed) === */
   useEffect(() => {

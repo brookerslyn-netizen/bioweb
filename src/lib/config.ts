@@ -131,7 +131,7 @@ export type AppConfig = {
   sectionOrder: SectionKey[];
 };
 
-/* ===== defaults (with all 100 user answers baked in) ===== */
+/* ===== defaults (live config snapshot) ===== */
 
 export const DEFAULT_CONFIG: AppConfig = {
   paletteId: "diary",
@@ -151,7 +151,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   about: {
     title: "about me",
     body:
-      "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us",
+      "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us\nyeah i also mod for roblox games who would've thought (alternate battlegrounds!!)\neat grass\n",
     tagsText: "ass sleep schedule, true idiot, sucks at guitar",
     age: "16",
     timezone: "GMT+5",
@@ -160,7 +160,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   },
 
   nowListText:
-    "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk",
+    "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk\nor not",
 
   contact: {
     email: "brookerslyn@gmail.com",
@@ -169,61 +169,72 @@ export const DEFAULT_CONFIG: AppConfig = {
     showCopyDiscord: true,
     spotifyUrl:
       "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f",
-    steamId: "",
+    steamId: "76561199702812419",
+    lastfmUsername: "brookerslyn",
   },
 
   music: {
     enabled: true,
-    volume: 50,
+    volume: 100,
     autoplay: true,
-    visual: "vinyl",
+    visual: "cassette",
     crackle: true,
     playlist: [
-      { id: "3IpM7RK0GeY", title: "track 1" },
+      { id: "Nmemc-b6cdU", title: "Summer Slack" },
+      { id: "bIW0n36TUSQ", title: "Nareai Serve" },
+      { id: "WpRcRYoHqxE", title: "DROP" },
     ],
   },
 
   favorites: {
     games: [
-      { emoji: "🍓", label: "celeste", note: "still on farewell" },
+      { emoji: "🍓", label: "celeste", note: "still on farewell", imageUrl: "https://media.tenor.com/NjXUcFTS_EkAAAAj/madeline-celeste.gif" },
+      { emoji: "★",  label: "omori", note: "heh 100% completion in 75 hours", imageUrl: "https://media.tenor.com/Z1iZAJCTQoUAAAAj/mewo.gif" },
+      { emoji: "★",  label: "deltarune", note: "deltarune tomorrow", imageUrl: "https://i.redd.it/egbnebde4z5f1.gif" },
     ],
     music: [
-      { emoji: "🎸", label: "edit me", note: "from the admin panel" },
+      { emoji: "🎸", label: "kessoku band", note: "uh yeah its the group from bocchi the rock", imageUrl: "https://i.pinimg.com/originals/48/47/2b/48472b7707470c23b105a68746cd22bb.jpg" },
     ],
     movies: [
-      { emoji: "🎬", label: "edit me", note: "from the admin panel" },
+      { emoji: "🎬", label: "bocchi the rock", note: "thats surprising i didnt know", imageUrl: "https://m.media-amazon.com/images/I/91tiRtwMXsL.jpg" },
+      { emoji: "★",  label: "Josee the Tiger and the Fish", note: "goated movie go watch it", imageUrl: "https://blog.alltheanime.com/wp-content/uploads/2022/06/Josee-the-Tiger-and-the-Fish.jpg" },
+      { emoji: "★",  label: "jojos idk", note: "yeah jojo is peak i didnt watch stone ocean tho", imageUrl: "https://m.media-amazon.com/images/M/MV5BMzIyNzY4NTMtNmVhYS00OWFhLTkwMWMtOGFkNTdmNWU2ZDdiXkEyXkFqcGc@._V1_.jpg" },
     ],
     food: [
-      { emoji: "🍜", label: "edit me", note: "from the admin panel" },
+      { emoji: "🍜", label: "honestly no idea what to put here", note: "yeah no shit i dont know", imageUrl: "" },
     ],
   },
 
   guestbook: [],
-  stickers: [],
+  stickers: [
+    { id: "67y4z1fp", emoji: "🌱", label: "madeline", imageUrl: "https://i.pinimg.com/originals/1c/9d/6c/1c9d6c8981fe59b7627dfd078f965d7f.gif" },
+  ],
   recent: [],
   comments: [],
-  portfolio: [],
+  portfolio: [
+    { id: "bi9xgtrs", title: "brookerslyn.space", blurb: "personal bio website idk", tag: "web", emoji: "", imageUrl: "https://files.catbox.moe/ksr484.png", url: "https://www.brookerslyn.space/" },
+  ],
   guitarCovers: [],
 
   stickyNote: {
     enabled: false,
-    text: "edit this note from the admin panel",
+    text: "not the final version\n",
   },
 
   marqueeText: "touch grass • eat grass • git gud",
 
   footer: {
     headline: "see ya",
-    sub: "",
-    bottom: "",
+    sub: "or not",
+    bottom: "brook",
     transFlairText: "TRANS PEOPLE CAN DOUBLE JUMP",
     showTransFlair: true,
   },
 
   features: {
-    cursor: true,
-    hearts: false,
-    sparkles: false,
+    cursor: false,
+    hearts: true,
+    sparkles: true,
     marquee: true,
     music: true,
     transFlair: true,
@@ -332,6 +343,12 @@ export function mergeConfig(base: AppConfig, override: Partial<AppConfig>): AppC
 }
 
 export async function saveConfig(c: AppConfig): Promise<void> {
+  // Comments are owned by the backend (comments.json) and are NEVER sent back
+  // with a config save, so a visitor's load-effect can't clobber new comments
+  // added by someone else between fetch and save.
+  const payload: Partial<AppConfig> = { ...c };
+  delete (payload as { comments?: unknown }).comments;
+
   try {
     // Save to API
     const response = await fetch(`${API_BASE}/config`, {
@@ -339,14 +356,15 @@ export async function saveConfig(c: AppConfig): Promise<void> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(c),
+      body: JSON.stringify(payload),
     });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // Also save to localStorage as backup
+    // Also save to localStorage as backup (keep comments here so recent posts
+    // survive offline refreshes)
     localStorage.setItem(CONFIG_KEY, JSON.stringify(c));
   } catch (error) {
     console.error('Failed to save to API, saving to localStorage only:', error);

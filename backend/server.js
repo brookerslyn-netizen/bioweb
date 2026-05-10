@@ -96,7 +96,8 @@ async function readConfig() {
         "discordId": "647814047210930223",
         "showCopyDiscord": true,
         "spotifyUrl": "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f",
-        "steamId": "76561199702812419"
+        "steamId": "76561199702812419",
+        "lastfmUsername": "brookerslyn"
       },
       "music": {
         "enabled": true,
@@ -105,158 +106,41 @@ async function readConfig() {
         "visual": "cassette",
         "crackle": true,
         "playlist": [
-          {
-            "id": "Nmemc-b6cdU",
-            "title": "Summer Slack"
-          },
-          {
-            "id": "bIW0n36TUSQ",
-            "title": "Nareai Serve"
-          },
-          {
-            "id": "WpRcRYoHqxE",
-            "title": "DROP"
-          }
+          { "id": "Nmemc-b6cdU", "title": "Summer Slack" },
+          { "id": "bIW0n36TUSQ", "title": "Nareai Serve" },
+          { "id": "WpRcRYoHqxE", "title": "DROP" }
         ]
       },
       "favorites": {
         "games": [
-          {
-            "emoji": "🍓",
-            "label": "celeste",
-            "note": "still on farewell",
-            "imageUrl": "https://media.tenor.com/NjXUcFTS_EkAAAAj/madeline-celeste.gif"
-          },
-          {
-            "emoji": "★",
-            "label": "omori ",
-            "note": "heh 100% completion in 75 hours",
-            "imageUrl": "https://media.tenor.com/Z1iZAJCTQoUAAAAj/mewo.gif"
-          },
-          {
-            "emoji": "★",
-            "label": "deltarune",
-            "note": "dont forget im under your bed",
-            "imageUrl": "https://i.redd.it/egbnebde4z5f1.gif"
-          }
+          { "emoji": "🍓", "label": "celeste", "note": "still on farewell", "imageUrl": "https://media.tenor.com/NjXUcFTS_EkAAAAj/madeline-celeste.gif" },
+          { "emoji": "★", "label": "omori", "note": "heh 100% completion in 75 hours", "imageUrl": "https://media.tenor.com/Z1iZAJCTQoUAAAAj/mewo.gif" },
+          { "emoji": "★", "label": "deltarune", "note": "deltarune tomorrow", "imageUrl": "https://i.redd.it/egbnebde4z5f1.gif" }
         ],
         "music": [
-          {
-            "emoji": "🎸",
-            "label": "kessoku band",
-            "note": "uh yeah its the group from bocchi the rock",
-            "imageUrl": "https://i.pinimg.com/originals/48/47/2b/48472b7707470c23b105a68746cd22bb.jpg"
-          }
+          { "emoji": "🎸", "label": "kessoku band", "note": "uh yeah its the group from bocchi the rock", "imageUrl": "https://i.pinimg.com/originals/48/47/2b/48472b7707470c23b105a68746cd22bb.jpg" }
         ],
         "movies": [
-          {
-            "emoji": "🎬",
-            "label": "bocchi the rock",
-            "note": "thats surprising i didnt know",
-            "imageUrl": "https://m.media-amazon.com/images/I/91tiRtwMXsL.jpg"
-          },
-          {
-            "emoji": "★",
-            "label": "Josee the Tiger and the FIsh",
-            "note": "goated movie go watch it",
-            "imageUrl": "https://blog.alltheanime.com/wp-content/uploads/2022/06/Josee-the-Tiger-and-the-Fish.jpg"
-          },
-          {
-            "emoji": "★",
-            "label": "jojos idk",
-            "note": "yeah jojo is peak i didnt watch stone ocean tho",
-            "imageUrl": "https://m.media-amazon.com/images/M/MV5BMzIyNzY4NTMtNmVhYS00OWFhLTkwMWMtOGFkNTdmNWU2ZDdiXkEyXkFqcGc@._V1_.jpg"
-          }
+          { "emoji": "🎬", "label": "bocchi the rock", "note": "thats surprising i didnt know", "imageUrl": "https://m.media-amazon.com/images/I/91tiRtwMXsL.jpg" },
+          { "emoji": "★", "label": "Josee the Tiger and the Fish", "note": "goated movie go watch it", "imageUrl": "https://blog.alltheanime.com/wp-content/uploads/2022/06/Josee-the-Tiger-and-the-Fish.jpg" },
+          { "emoji": "★", "label": "jojos idk", "note": "yeah jojo is peak i didnt watch stone ocean tho", "imageUrl": "https://m.media-amazon.com/images/M/MV5BMzIyNzY4NTMtNmVhYS00OWFhLTkwMWMtOGFkNTdmNWU2ZDdiXkEyXkFqcGc@._V1_.jpg" }
         ],
         "food": [
-          {
-            "emoji": "🍜",
-            "label": "honestly no idea what to put here",
-            "note": "yeah no shit i dont know ",
-            "imageUrl": ""
-          }
+          { "emoji": "🍜", "label": "honestly no idea what to put here", "note": "yeah no shit i dont know", "imageUrl": "" }
         ]
       },
       "guestbook": [],
       "stickers": [
-        {
-          "id": "67y4z1fp",
-          "emoji": "🌱",
-          "label": "madeline",
-          "imageUrl": "https://i.pinimg.com/originals/1c/9d/6c/1c9d6c8981fe59b7627dfd078f965d7f.gif"
-        }
+        { "id": "67y4z1fp", "emoji": "🌱", "label": "madeline", "imageUrl": "https://i.pinimg.com/originals/1c/9d/6c/1c9d6c8981fe59b7627dfd078f965d7f.gif" }
       ],
       "recent": [],
-      "comments": [
-        {
-          "id": "1778327008325",
-          "name": "Talking Patzer",
-          "message": "rapidly declining mental function",
-          "timestamp": "2026-05-09T11:43:28.325Z"
-        },
-        {
-          "id": "1778324940443",
-          "name": "Totally not Niko from oneshot",
-          "message": "You should play oneshot",
-          "timestamp": "2026-05-09T11:09:00.443Z"
-        },
-        {
-          "id": "1778324366081",
-          "name": "Not Waffles",
-          "message": "Don't sybrookau",
-          "timestamp": "2026-05-09T10:59:26.081Z"
-        },
-        {
-          "id": "1778324337424",
-          "name": "NOT maple",
-          "message": "if larping is your power what are you without it",
-          "timestamp": "2026-05-09T10:58:57.424Z"
-        },
-        {
-          "id": "1778323891915",
-          "name": "Corrosion",
-          "message": "The FitnessGram Pacer Test is a multistage aerobic capacity test that progressively gets more difficult as it continues. The 20 meter pacer test will begin in 30 seconds. Line up at the start. The run",
-          "timestamp": "2026-05-09T10:51:31.915Z"
-        },
-        {
-          "id": "1778322182821",
-          "name": "Hokyo",
-          "message": "Kys",
-          "timestamp": "2026-05-09T10:23:02.821Z"
-        },
-        {
-          "id": "1778321188159",
-          "name": "real brook",
-          "message": "i love grass",
-          "timestamp": "2026-05-09T10:06:28.159Z"
-        },
-        {
-          "id": "1778319572270",
-          "name": "Mars",
-          "message": "Can I have half your paycheck pls",
-          "timestamp": "2026-05-09T09:39:32.270Z"
-        },
-        {
-          "id": "1778319378446",
-          "name": "Gaster",
-          "message": "Collect my aba moves",
-          "timestamp": "2026-05-09T09:36:18.446Z"
-        },
-        {
-          "id": "1778318760068",
-          "name": "skinwalker brook",
-          "message": "I l o v e g r a s s :)\nI l o v e g r a s s :)\nI l o v e g r a s s :)\ng r a s s i s g r e e n .",
-          "timestamp": "2026-05-09T09:26:00.068Z"
-        },
-        {
-          "id": "1778317848487",
-          "name": "evil brook",
-          "message": "i HATE grass!!!",
-          "timestamp": "2026-05-09T09:10:48.487Z"
-        }
+      "comments": [],
+      "portfolio": [
+        { "id": "bi9xgtrs", "title": "brookerslyn.space", "blurb": "personal bio website idk", "tag": "web", "emoji": "", "imageUrl": "https://files.catbox.moe/ksr484.png", "url": "https://www.brookerslyn.space/" }
       ],
+      "guitarCovers": [],
       "stickyNote": {
-        "enabled": true,
+        "enabled": false,
         "text": "not the final version\n"
       },
       "marqueeText": "touch grass • eat grass • git gud",
@@ -268,7 +152,7 @@ async function readConfig() {
         "showTransFlair": true
       },
       "features": {
-        "cursor": true,
+        "cursor": false,
         "hearts": true,
         "sparkles": true,
         "marquee": true,
@@ -376,6 +260,18 @@ app.post('/api/config', async (req, res) => {
   } catch (error) {
     console.error('Error writing config:', error);
     res.status(500).json({ error: 'Failed to save config' });
+  }
+});
+
+// GET comments - lightweight endpoint so the frontend can refresh comments
+// without re-downloading the whole config.
+app.get('/api/comments', async (req, res) => {
+  try {
+    const comments = await readComments();
+    res.json({ comments });
+  } catch (error) {
+    console.error('Error reading comments:', error);
+    res.status(500).json({ error: 'Failed to read comments' });
   }
 });
 

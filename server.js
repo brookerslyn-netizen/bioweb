@@ -40,7 +40,7 @@ async function readConfig() {
   } catch (error) {
     // If file doesn't exist, return default config
     const defaultConfig = {
-      paletteId: "forest",
+      paletteId: "diary",
       customPalettes: [],
       bgUrl: "",
       hero: {
@@ -54,56 +54,79 @@ async function readConfig() {
       },
       about: {
         title: "about me",
-        body: "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us",
+        body: "mostly a lazy person idk type shit\nplay celeste it'll turn you into one of us\nyeah i also mod for roblox games who would've thought (alternate battlegrounds!!)\neat grass\n",
         tagsText: "ass sleep schedule, true idiot, sucks at guitar",
         age: "16",
         timezone: "GMT+5",
         showAge: true,
         showTimezone: true,
       },
-      nowListText: "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk",
+      nowListText: "still didnt beat farewell\neither in discord or playing guitar\nor sleeping idk\nor not",
       contact: {
         email: "brookerslyn@gmail.com",
         showEmail: true,
         discordId: "647814047210930223",
         showCopyDiscord: true,
         spotifyUrl: "https://open.spotify.com/user/bwgcycadjmtonviwisal8vnp8?si=5c905528ace34b0f",
-        steamId: "",
+        steamId: "76561199702812419",
+        lastfmUsername: "brookerslyn",
       },
       music: {
         enabled: true,
-        volume: 50,
+        volume: 100,
         autoplay: true,
-        visual: "vinyl",
+        visual: "cassette",
         crackle: true,
-        playlist: [{ id: "3IpM7RK0GeY", title: "track 1" }],
+        playlist: [
+          { id: "Nmemc-b6cdU", title: "Summer Slack" },
+          { id: "bIW0n36TUSQ", title: "Nareai Serve" },
+          { id: "WpRcRYoHqxE", title: "DROP" },
+        ],
       },
       favorites: {
-        games: [{ emoji: "🍓", label: "celeste", note: "still on farewell", imageUrl: "" }],
-        music: [{ emoji: "🎸", label: "edit me", note: "from the admin panel", imageUrl: "" }],
-        movies: [{ emoji: "🎬", label: "edit me", note: "from the admin panel", imageUrl: "" }],
-        food: [{ emoji: "🍜", label: "edit me", note: "from the admin panel", imageUrl: "" }],
+        games: [
+          { emoji: "🍓", label: "celeste", note: "still on farewell", imageUrl: "https://media.tenor.com/NjXUcFTS_EkAAAAj/madeline-celeste.gif" },
+          { emoji: "★", label: "omori", note: "heh 100% completion in 75 hours", imageUrl: "https://media.tenor.com/Z1iZAJCTQoUAAAAj/mewo.gif" },
+          { emoji: "★", label: "deltarune", note: "deltarune tomorrow", imageUrl: "https://i.redd.it/egbnebde4z5f1.gif" },
+        ],
+        music: [
+          { emoji: "🎸", label: "kessoku band", note: "uh yeah its the group from bocchi the rock", imageUrl: "https://i.pinimg.com/originals/48/47/2b/48472b7707470c23b105a68746cd22bb.jpg" },
+        ],
+        movies: [
+          { emoji: "🎬", label: "bocchi the rock", note: "thats surprising i didnt know", imageUrl: "https://m.media-amazon.com/images/I/91tiRtwMXsL.jpg" },
+          { emoji: "★", label: "Josee the Tiger and the Fish", note: "goated movie go watch it", imageUrl: "https://blog.alltheanime.com/wp-content/uploads/2022/06/Josee-the-Tiger-and-the-Fish.jpg" },
+          { emoji: "★", label: "jojos idk", note: "yeah jojo is peak i didnt watch stone ocean tho", imageUrl: "https://m.media-amazon.com/images/M/MV5BMzIyNzY4NTMtNmVhYS00OWFhLTkwMWMtOGFkNTdmNWU2ZDdiXkEyXkFqcGc@._V1_.jpg" },
+        ],
+        food: [
+          { emoji: "🍜", label: "honestly no idea what to put here", note: "yeah no shit i dont know", imageUrl: "" },
+        ],
       },
       guestbook: [],
-      stickers: [],
+      stickers: [
+        { id: "67y4z1fp", emoji: "🌱", label: "madeline", imageUrl: "https://i.pinimg.com/originals/1c/9d/6c/1c9d6c8981fe59b7627dfd078f965d7f.gif" },
+      ],
       recent: [],
       comments: [],
+      portfolio: [
+        { id: "bi9xgtrs", title: "brookerslyn.space", blurb: "personal bio website idk", tag: "web", emoji: "", imageUrl: "https://files.catbox.moe/ksr484.png", url: "https://www.brookerslyn.space/" },
+      ],
+      guitarCovers: [],
       stickyNote: {
         enabled: false,
-        text: "edit this note from the admin panel",
+        text: "not the final version\n",
       },
       marqueeText: "touch grass • eat grass • git gud",
       footer: {
         headline: "see ya",
-        sub: "",
-        bottom: "",
+        sub: "or not",
+        bottom: "brook",
         transFlairText: "TRANS PEOPLE CAN DOUBLE JUMP",
         showTransFlair: true,
       },
       features: {
-        cursor: true,
-        hearts: false,
-        sparkles: false,
+        cursor: false,
+        hearts: true,
+        sparkles: true,
         marquee: true,
         music: true,
         transFlair: true,
@@ -111,6 +134,7 @@ async function readConfig() {
         confetti: true,
         konami: true,
         polaroidFlip: true,
+        spotify: true,
       },
       sectionOrder: [
         "hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "footer"
