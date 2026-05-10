@@ -9,7 +9,14 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3001;
-const CONFIG_FILE = path.join(__dirname, 'config.json');
+
+// Persistent data dir — survives Railway redeploys when a volume is attached.
+const DATA_DIR = process.env.DATA_DIR
+  || process.env.RAILWAY_VOLUME_MOUNT_PATH
+  || __dirname;
+const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
+
+try { await fs.mkdir(DATA_DIR, { recursive: true }); } catch { /* ignore */ }
 
 // Store IP addresses of users who have commented
 const commentIPs = new Set();

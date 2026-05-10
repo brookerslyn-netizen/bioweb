@@ -10,8 +10,24 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const CONFIG_FILE = path.join(__dirname, 'config.json');
-const COMMENTS_FILE = path.join(__dirname, 'comments.json');
+
+// Persistent data directory. On Railway, attach a volume and Railway sets
+// RAILWAY_VOLUME_MOUNT_PATH automatically. Locally or without a volume, fall
+// back to this folder alongside server.js.
+const DATA_DIR = process.env.DATA_DIR
+  || process.env.RAILWAY_VOLUME_MOUNT_PATH
+  || __dirname;
+const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
+const COMMENTS_FILE = path.join(DATA_DIR, 'comments.json');
+
+// Ensure the data directory exists (Railway volume mount paths always do,
+// but a custom DATA_DIR on another host might not).
+try {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+} catch (err) {
+  console.warn('DATA_DIR mkdir warning:', err?.message || err);
+}
+console.log(`Data directory: ${DATA_DIR}`);
 
 // Spotify API Configuration
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
