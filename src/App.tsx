@@ -9,7 +9,7 @@ import {
   customPaletteToVars,
   BUILTIN_PALETTES,
 } from "./lib/palettes";
-import { loadConfig, saveConfig, clearConfigCache, pushHistory, checkAdminAuth, logoutAdmin, type AppConfig, type SectionKey, } from "./lib/config";
+import { loadConfig, saveConfig, pushHistory, checkAdminAuth, logoutAdmin, type AppConfig, type SectionKey, } from "./lib/config";
 
 const API_BASE = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD 
@@ -63,15 +63,21 @@ function App() {
   useEffect(() => {
     const initializeConfig = async () => {
       try {
-        // Clear cache to force reload from API
-        clearConfigCache();
         const loadedConfig = await loadConfig();
         setConfig(loadedConfig);
       } catch (error) {
         console.error('Failed to load config:', error);
-        // Fallback to a basic config
+        // try localStorage before falling back to hardcoded defaults
+        try {
+          const raw = localStorage.getItem("brook-config");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            setConfig(parsed);
+            return;
+          }
+        } catch { /* ignore */ }
         setConfig({
-          paletteId: "forest",
+          paletteId: "diary",
           customPalettes: [],
           bgUrl: "",
           hero: { name: "brook", handle: "@brookerslyn", subtitle: "chronically dumb", typingLinesText: "touch grass\neat grass", scrollHint: "scroll for screamers", splashText: "click to steal your data", showSparkles: false },
@@ -91,7 +97,6 @@ function App() {
         setLoading(false);
       }
     };
-    
     initializeConfig();
   }, []);
 
@@ -114,13 +119,19 @@ function App() {
     }
   }, [config?.paletteId, config?.customPalettes]);
 
-  /* === persist config === */
+  /* === persist config (debounced, skip initial load) === */
+  const isFirstRender = useRef(true);
   useEffect(() => {
-    if (config) {
-      saveConfig(config).catch(error => {
-        console.error('Failed to save config:', error);
-      });
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
+    if (!config) return;
+    // debounce — wait 800ms after last change before saving
+    const timer = setTimeout(() => {
+      saveConfig(config).catch(err => console.error('Failed to save config:', err));
+    }, 800);
+    return () => clearTimeout(timer);
   }, [config]);
 
   /* === keyboard shortcut: ctrl+. opens admin (only if authed) === */
@@ -171,36 +182,18 @@ function App() {
 
   const handleAddComment = async (name: string, message: string) => {
     try {
-      console.log('Submitting comment:', { name, message });
-      
       const response = await fetch(`${API_BASE}/comments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, message }),
       });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
       const result = await response.json();
-      console.log('Response data:', result);
-      
-      if (!response.ok) {
-        throw new Error(result.error || `HTTP error! status: ${response.status}`);
-      }
-
-      // Update local state with new comment
+      if (!response.ok) throw new Error(result.error || `HTTP error! status: ${response.status}`);
       if (config) {
-        setConfig({
-          ...config,
-          comments: [result.comment, ...(config.comments || [])]
-        });
+        setConfig({ ...config, comments: [result.comment, ...(config.comments || [])] });
       }
     } catch (error: any) {
-      console.error('Failed to add comment:', error);
-      console.error('Error details:', error.message);
+      console.error('Failed to add comment:', error.message);
       throw error;
     }
   };
@@ -243,10 +236,6 @@ function App() {
   };
 
   const bgUrl = config?.bgUrl || bgGif;
-  
-  // Debug: Log background URL
-  console.log('Background URL from config:', config?.bgUrl);
-  console.log('Final bgUrl:', bgUrl);
 
   if (loading || !config) {
     return (
