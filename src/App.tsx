@@ -154,8 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    // matches the falling stage (~900ms CSS transition)
-    setTimeout(() => setEntered(true), 950);
+    // splash fades itself out; small buffer before fully unmounting
+    setTimeout(() => setEntered(true), 60);
   }, []);
 
   function logout() {

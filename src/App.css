@@ -118,37 +118,27 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
 }
 
 /* ---- motion classes ----
-   Used by both the paper halves and the washi layers so they move together.
-   Longer ease for "tearing" so you see the paper separate slowly, then
-   a second phase for "falling" slings them off screen. */
+   One continuous transition from rest to off-screen; no mid-animation easing
+   switch so the motion reads as a single smooth pull. */
 .splash-left-move,
 .splash-right-move {
-  transition: transform 1500ms cubic-bezier(0.33, 0, 0.25, 1),
-              opacity 800ms ease-out;
-  transform: translateX(0);
+  transition: transform 2000ms cubic-bezier(0.22, 0.8, 0.28, 1),
+              opacity 900ms ease-out 1100ms;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
-/* tearing stage: slow, deliberate pull apart so the jagged seam reads */
-[data-stage="tearing"] .splash-left-move {
-  transform: translateX(-55vw);
-  opacity: 1;
-}
-[data-stage="tearing"] .splash-right-move {
-  transform: translateX(55vw);
-  opacity: 1;
-}
-
-/* falling stage: after the dwell, halves sling off screen with rotation */
+/* Single target state — the halves drift apart then continue off-screen
+   in one ease. No intermediate stop means no seam in the motion. */
+[data-stage="tearing"] .splash-left-move,
 [data-stage="falling"] .splash-left-move {
-  transition: transform 900ms cubic-bezier(0.55, 0.1, 0.75, 1),
-              opacity 700ms ease-out;
-  transform: translate(-130vw, 10vh) rotate(-8deg);
+  transform: translate3d(-125vw, 6vh, 0) rotate(-6deg);
   opacity: 0;
 }
+[data-stage="tearing"] .splash-right-move,
 [data-stage="falling"] .splash-right-move {
-  transition: transform 900ms cubic-bezier(0.55, 0.1, 0.75, 1),
-              opacity 700ms ease-out;
-  transform: translate(130vw, 10vh) rotate(8deg);
+  transform: translate3d(125vw, 6vh, 0) rotate(6deg);
   opacity: 0;
 }
 

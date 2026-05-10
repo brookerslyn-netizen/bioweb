@@ -239,12 +239,10 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     audioRef.current = audio;
     audio.play().catch(() => { /* autoplay blocked — animation still runs */ });
 
-    // Tear + slide apart, then fall off-screen. Matches 1500ms CSS transition for tearing.
+    // Single smooth 2s transition: halves pull apart then slide off screen
+    // in one continuous motion. No mid-stage state change.
     setStage("tearing");
-    const t1 = setTimeout(() => {
-      setStage("falling");
-      onEnter();
-    }, 1500);
+    const t1 = setTimeout(() => onEnter(), 2000);
 
     return () => clearTimeout(t1);
   }, [onEnter]);
