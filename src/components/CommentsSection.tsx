@@ -6,6 +6,8 @@ const API_BASE = import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD ? "/api" : "http://localhost:3001/api");
 
 /* stable layout per comment */
+const WASHI_VARIANTS = ["washi-pink", "washi-mint", "washi-yellow", "washi-lavender", "washi-peach"] as const;
+
 function noteStyle(id: string, index: number) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
@@ -19,7 +21,8 @@ function noteStyle(id: string, index: number) {
   ];
   const color = colors[h % colors.length];
   const tapeAngle = ((h >> 6) % 30) - 15;
-  return { x, y, rot, color, tapeAngle };
+  const washi = WASHI_VARIANTS[h % WASHI_VARIANTS.length];
+  return { x, y, rot, color, tapeAngle, washi };
 }
 
 export function CommentsSection({
@@ -156,9 +159,19 @@ export function CommentsSection({
       <div className="relative flex-shrink-0 px-6 py-3 flex items-center gap-3 z-20 palette-surface"
         style={{ borderBottom: "2px solid var(--p-surface-border, rgba(0,0,0,0.12))" }}>
         {/* washi tape across header */}
-        <div className="absolute top-0 left-8 right-8 h-5 rounded-sm" style={{
-          background: "repeating-linear-gradient(135deg, rgba(253,224,71,0.75) 0px, rgba(253,224,71,0.75) 8px, rgba(254,240,138,0.75) 8px, rgba(254,240,138,0.75) 16px)",
-          transform: "rotate(-0.5deg)",
+        <div className="washi washi-yellow" style={{
+          position: "absolute",
+          top: -8,
+          left: 32,
+          width: 120,
+          transform: "rotate(-3deg)",
+        }} />
+        <div className="washi washi-pink" style={{
+          position: "absolute",
+          top: -8,
+          right: 40,
+          width: 100,
+          transform: "rotate(4deg)",
         }} />
         <span className="palette-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 26 }}>
           sticky notes
@@ -192,11 +205,14 @@ export function CommentsSection({
           {/* ── write a note ── */}
           <div className="absolute" style={{ left: 40, top: 30, width: 240, transform: "rotate(-2deg)", zIndex: 10 }}>
             {/* tape strip holding the note */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 rounded-sm" style={{
-              background: "rgba(253,224,71,0.8)",
+            <div className="washi washi-yellow" style={{
+              position: "absolute",
+              top: -10,
+              left: "50%",
+              width: 80,
+              marginLeft: -40,
               transform: "rotate(2deg)",
               zIndex: 20,
-              borderTop: "1px solid rgba(255,255,255,0.3)",
             }} />
             <div style={{
               background: "#fffde7",
@@ -261,7 +277,7 @@ export function CommentsSection({
 
           {/* ── comment notes ── */}
           {visibleComments.map((comment, i) => {
-            const { x, y, rot, color, tapeAngle } = noteStyle(comment.id, i);
+            const { x, y, rot, color, tapeAngle, washi } = noteStyle(comment.id, i);
             const hearts = localHearts[comment.id] ?? comment.hearts ?? 0;
             const hearted = heartedIds.has(comment.id);
 
@@ -281,13 +297,14 @@ export function CommentsSection({
                 )}
 
                 {/* washi tape strip holding the note */}
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 h-5 rounded-sm overflow-hidden" style={{
-                  width: 50 + (i % 3) * 10,
+                <div className={`washi ${washi}`} style={{
+                  position: "absolute",
+                  top: -10,
+                  left: "50%",
+                  width: 70 + (i % 3) * 12,
+                  marginLeft: -(70 + (i % 3) * 12) / 2,
                   transform: `rotate(${tapeAngle}deg)`,
                   zIndex: 5,
-                  background: "repeating-linear-gradient(135deg, rgba(253,224,71,0.9) 0px, rgba(253,224,71,0.9) 8px, rgba(139,90,43,0.25) 8px, rgba(139,90,43,0.25) 16px)",
-                  borderTop: "1px solid rgba(255,255,255,0.4)",
-                  borderBottom: "1px solid rgba(0,0,0,0.06)",
                 }} />
 
                 {/* note paper */}
