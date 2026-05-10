@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react";
-import { Music2, ExternalLink, BarChart2, ChevronDown, ChevronRight } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Music2, ExternalLink, BarChart2, ChevronDown, ChevronRight, Play, Pause, Loader2 } from "lucide-react";
+
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3001/api");
+const PLAY_YT_TRACK_EVENT = "play-yt-track";
 
 interface LastFmTrack {
   name: string;
@@ -34,6 +37,9 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
   const [loading, setLoading] = useState(true);
   const [showRecents, setShowRecents] = useState(false);
   const [showArtists, setShowArtists] = useState(false);
+  const [playingTrackUrl, setPlayingTrackUrl] = useState<string | null>(null);
+  const [searchingTrackUrl, setSearchingTrackUrl] = useState<string | null>(null);
+  const playingYtId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -65,6 +71,54 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [username]);
+
+  // Listen for music player stopping to clear playing indicator
+  useEffect(() => {
+    const onStop = () => {
+      setPlayingTrackUrl(null);
+      playingYtId.current = null;
+    };
+    window.addEventListener("yt-track-ended", onStop);
+    return () => window.removeEventListener("yt-track-ended", onStop);
+  }, []);
+
+  const handlePlayTrack = async (track: LastFmTrack, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const trackKey = track.url;
+    
+    // If already playing this track, stop it
+    if (playingTrackUrl === trackKey) {
+      window.dispatchEvent(new CustomEvent(PLAY_YT_TRACK_EVENT, { detail: null }));
+      setPlayingTrackUrl(null);
+      playingYtId.current = null;
+      return;
+    }
+
+    setSearchingTrackUrl(trackKey);
+    try {
+      const query = encodeURIComponent(`${track.name} ${track.artist["#text"]}`);
+      const res = await fetch(`${API_BASE}/youtube/search?q=${query}`);
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json();
+
+      playingYtId.current = data.videoId;
+      setPlayingTrackUrl(trackKey);
+      setShowRecents(true); // Keep recents open while playing
+
+      // Tell MusicPlayer to load and autoplay this video
+      window.dispatchEvent(
+        new CustomEvent(PLAY_YT_TRACK_EVENT, {
+          detail: { videoId: data.videoId, title: track.name, artist: track.artist["#text"] },
+        })
+      );
+    } catch {
+      // silently fail
+    } finally {
+      setSearchingTrackUrl(null);
+    }
+  };
 
   const recentTracks = nowPlaying ? recent.slice(1) : recent;
 
@@ -156,48 +210,98 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
             ) : recentTracks.length === 0 ? (
               <div className="text-center py-4 paper-text-muted italic text-sm flex-shrink-0">no recent tracks</div>
             ) : (
-              recentTracks.map((track, i) => (
-                <a
-                  key={i}
-                  href={track.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-shrink-0 w-36 group"
-                  style={{ scrollSnapAlign: "start" }}
-                >
-                  <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors">
-                    {getImg(track.image) ? (
-                      <img 
-                        src={getImg(track.image)} 
-                        alt="" 
-                        className="w-full aspect-square rounded object-cover mb-2"
-                      />
-                    ) : (
-                      <div className="w-full aspect-square rounded palette-accent-bg flex items-center justify-center mb-2">
-                        <Music2 size={20} />
-                      </div>
-                    )}
-                    <div 
-                      className="text-xs font-medium paper-text truncate" 
-                      style={{ fontFamily: "'Indie Flower', cursive" }}
-                      title={track.name}
+              recentTracks.map((track, i) => {
+                const isSearching = searchingTrackUrl === track.url;
+                const isPlaying = playingTrackUrl === track.url;
+                return (
+                  <div
+                    key={i}
+                    className="flex-shrink-0 w-36 group relative"
+                    style={{ scrollSnapAlign: "start" }}
+                  >
+                    {/* Play button overlay */}
+                    <button
+                      onClick={(e) => handlePlayTrack(track, e)}
+                      className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full palette-accent-bg flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95"
+                      style={{ opacity: isPlaying || isSearching ? 1 : 0, transition: "opacity 200ms" }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
                     >
-                      {track.name}
-                    </div>
-                    <div className="text-[10px] paper-text-muted truncate" title={track.artist["#text"]}>
-                      {track.artist["#text"]}
-                    </div>
-                    {track.date && (
-                      <div className="text-[9px] paper-text-muted mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {new Date(parseInt(track.date.uts) * 1000).toLocaleDateString("en-US", { 
-                          month: "short", 
-                          day: "numeric" 
-                        })}
+                      {isSearching ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : isPlaying ? (
+                        <Pause size={16} />
+                      ) : (
+                        <Play size={16} className="ml-0.5" />
+                      )}
+                    </button>
+                    <a
+                      href={track.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block"
+                    >
+                      <div className="paper p-2 rounded-lg hover:bg-black/5 transition-colors relative">
+                        <div 
+                          className="relative mb-2"
+                          onMouseEnter={(e) => {
+                            const btn = e.currentTarget.querySelector("button");
+                            if (btn) btn.style.opacity = "1";
+                          }}
+                          onMouseLeave={(e) => {
+                            const btn = e.currentTarget.querySelector("button");
+                            if (btn && !isPlaying && !isSearching) btn.style.opacity = "0";
+                          }}
+                        >
+                          {getImg(track.image) ? (
+                            <img 
+                              src={getImg(track.image)} 
+                              alt="" 
+                              className="w-full aspect-square rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-full aspect-square rounded palette-accent-bg flex items-center justify-center">
+                              <Music2 size={20} />
+                            </div>
+                          )}
+                          {/* Hover play button */}
+                          <button
+                            onClick={(e) => handlePlayTrack(track, e)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/40 rounded transition-opacity opacity-0 group-hover:opacity-100"
+                          >
+                            <div className="w-10 h-10 rounded-full palette-accent-bg flex items-center justify-center shadow-lg">
+                              {isSearching ? (
+                                <Loader2 size={20} className="animate-spin" />
+                              ) : isPlaying ? (
+                                <Pause size={20} />
+                              ) : (
+                                <Play size={20} className="ml-1" />
+                              )}
+                            </div>
+                          </button>
+                        </div>
+                        <div 
+                          className="text-xs font-medium paper-text truncate" 
+                          style={{ fontFamily: "'Indie Flower', cursive" }}
+                          title={track.name}
+                        >
+                          {track.name}
+                        </div>
+                        <div className="text-[10px] paper-text-muted truncate" title={track.artist["#text"]}>
+                          {track.artist["#text"]}
+                        </div>
+                        {track.date && (
+                          <div className="text-[9px] paper-text-muted mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {new Date(parseInt(track.date.uts) * 1000).toLocaleDateString("en-US", { 
+                              month: "short", 
+                              day: "numeric" 
+                            })}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </a>
                   </div>
-                </a>
-              ))
+                );
+              })
             )}
           </div>
         </div>

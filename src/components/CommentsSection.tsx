@@ -280,21 +280,15 @@ export function CommentsSection({
                   </div>
                 )}
 
-                {/* Konami tape strip holding the note */}
+                {/* washi tape strip holding the note */}
                 <div className="absolute -top-2 left-1/2 -translate-x-1/2 h-5 rounded-sm overflow-hidden" style={{
                   width: 50 + (i % 3) * 10,
                   transform: `rotate(${tapeAngle}deg)`,
                   zIndex: 5,
-                  background: "rgba(253,224,71,0.85)",
+                  background: "repeating-linear-gradient(135deg, rgba(253,224,71,0.9) 0px, rgba(253,224,71,0.9) 8px, rgba(139,90,43,0.25) 8px, rgba(139,90,43,0.25) 16px)",
                   borderTop: "1px solid rgba(255,255,255,0.4)",
                   borderBottom: "1px solid rgba(0,0,0,0.06)",
-                }}>
-                  {/* X pattern for Konami tape */}
-                  <svg width="100%" height="100%" viewBox="0 0 40 20" preserveAspectRatio="none">
-                    <line x1="0" y1="0" x2="40" y2="20" stroke="rgba(139,90,43,0.3)" strokeWidth="2" />
-                    <line x1="40" y1="0" x2="0" y2="20" stroke="rgba(139,90,43,0.3)" strokeWidth="2" />
-                  </svg>
-                </div>
+                }} />
 
                 {/* note paper */}
                 <div className="transition-shadow" style={{

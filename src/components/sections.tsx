@@ -14,7 +14,7 @@ export function HeroSection({ config, onNameClick }: { config: AppConfig; onName
     <section id="hero" className="relative pt-12 md:pt-20 pb-16 md:pb-24 px-6 text-center">
       <Doodle kind="star" top="22%" left="6%" size={32} rotate={-15} />
 
-      {/* decorative tape strips */}
+      {/* decorative washi tape strips */}
       <div className="absolute top-4 left-[15%] washi washi-peach hidden md:block" style={{ width: 60, height: 16, transform: "rotate(-12deg)" }} />
       <div className="absolute top-8 right-[12%] washi washi-lavender hidden md:block" style={{ width: 70, height: 16, transform: "rotate(8deg)" }} />
 
