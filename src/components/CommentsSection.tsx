@@ -18,10 +18,8 @@ function noteStyle(id: string, index: number) {
     "#fff9c4", "#fce4ec", "#e8f5e9", "#e3f2fd", "#fff3e0", "#f3e5f5", "#fafaf2", "#fff8a8",
   ];
   const color = colors[h % colors.length];
-  const tapeColors = ["rgba(255,158,193,0.7)", "rgba(110,231,183,0.7)", "rgba(253,224,71,0.7)", "rgba(196,181,253,0.7)", "rgba(251,191,146,0.7)"];
-  const tape = tapeColors[h % tapeColors.length];
   const tapeAngle = ((h >> 6) % 30) - 15;
-  return { x, y, rot, color, tape, tapeAngle };
+  return { x, y, rot, color, tapeAngle };
 }
 
 export function CommentsSection({
@@ -263,7 +261,7 @@ export function CommentsSection({
 
           {/* ── comment notes ── */}
           {visibleComments.map((comment, i) => {
-            const { x, y, rot, color, tape, tapeAngle } = noteStyle(comment.id, i);
+            const { x, y, rot, color, tapeAngle } = noteStyle(comment.id, i);
             const hearts = localHearts[comment.id] ?? comment.hearts ?? 0;
             const hearted = heartedIds.has(comment.id);
 
@@ -282,15 +280,21 @@ export function CommentsSection({
                   </div>
                 )}
 
-                {/* tape strip holding the note */}
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 rounded-sm" style={{
+                {/* Konami tape strip holding the note */}
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 h-5 rounded-sm overflow-hidden" style={{
                   width: 50 + (i % 3) * 10,
-                  background: tape,
                   transform: `rotate(${tapeAngle}deg)`,
                   zIndex: 5,
-                  borderTop: "1px solid rgba(255,255,255,0.3)",
-                  borderBottom: "1px solid rgba(0,0,0,0.04)",
-                }} />
+                  background: "rgba(253,224,71,0.85)",
+                  borderTop: "1px solid rgba(255,255,255,0.4)",
+                  borderBottom: "1px solid rgba(0,0,0,0.06)",
+                }}>
+                  {/* X pattern for Konami tape */}
+                  <svg width="100%" height="100%" viewBox="0 0 40 20" preserveAspectRatio="none">
+                    <line x1="0" y1="0" x2="40" y2="20" stroke="rgba(139,90,43,0.3)" strokeWidth="2" />
+                    <line x1="40" y1="0" x2="0" y2="20" stroke="rgba(139,90,43,0.3)" strokeWidth="2" />
+                  </svg>
+                </div>
 
                 {/* note paper */}
                 <div className="transition-shadow" style={{

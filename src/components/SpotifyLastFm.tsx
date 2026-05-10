@@ -42,20 +42,28 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
     const key = import.meta.env.VITE_LASTFM_API_KEY || "";
     if (!key) { setLoading(false); return; }
 
-    const recentUrl = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=10&api_key=${key}&format=json`;
-    const artistsUrl = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=1month&limit=10&api_key=${key}&format=json`;
+    const fetchData = () => {
+      const recentUrl = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${username}&limit=10&api_key=${key}&format=json`;
+      const artistsUrl = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${username}&period=1month&limit=10&api_key=${key}&format=json`;
 
-    Promise.all([
-      fetch(recentUrl).then(r => r.json()),
-      fetch(artistsUrl).then(r => r.json()),
-    ]).then(([r, a]) => {
-      const tracks = r?.recenttracks?.track || [];
-      setRecent(tracks);
-      setTopArtists(a?.topartists?.artist || []);
-      // Check for now playing
-      const np = tracks[0]?.["@attr"]?.nowplaying === "true" ? tracks[0] : null;
-      setNowPlaying(np);
-    }).catch(() => {}).finally(() => setLoading(false));
+      Promise.all([
+        fetch(recentUrl).then(r => r.json()),
+        fetch(artistsUrl).then(r => r.json()),
+      ]).then(([r, a]) => {
+        const tracks = r?.recenttracks?.track || [];
+        setRecent(tracks);
+        setTopArtists(a?.topartists?.artist || []);
+        // Check for now playing - Last.fm returns @attr with nowplaying="true" for currently playing track
+        const firstTrack = tracks[0];
+        const isNowPlaying = firstTrack?.["@attr"]?.nowplaying === "true" || firstTrack?.["@attr"]?.nowplaying === true;
+        setNowPlaying(isNowPlaying ? firstTrack : null);
+      }).catch(() => {}).finally(() => setLoading(false));
+    };
+
+    fetchData();
+    // Refresh now playing status every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [username]);
 
   const recentTracks = nowPlaying ? recent.slice(1) : recent;
