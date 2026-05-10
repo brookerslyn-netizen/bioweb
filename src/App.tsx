@@ -154,8 +154,8 @@ function App() {
   /* === splash transition === */
   const handleEnter = useCallback(() => {
     setLeaving(true);
-    // covers the falling animations (right 750ms + left 780ms @ 180ms delay = ~960ms)
-    setTimeout(() => setEntered(true), 1000);
+    // covers the falling slide-off (~700ms)
+    setTimeout(() => setEntered(true), 750);
   }, []);
 
   function logout() {
@@ -311,9 +311,9 @@ function App() {
         <StickyNoteBar text={config.stickyNote.text} onDismiss={dismissSticky} />
       )}
 
-      {/* sections */}
+      {/* sections — home always renders underneath so it's visible through the tear */}
       <main className="relative z-[1]">
-        {entered && currentView === "main" && config?.sectionOrder.map((s) => renderSection(s))}
+        {currentView === "main" && config?.sectionOrder.map((s) => renderSection(s))}
         {entered && currentView === "portfolio" && (
           <PortfolioPage
             projects={config?.portfolio || []}

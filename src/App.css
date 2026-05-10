@@ -54,39 +54,33 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   z-index: 50;
   cursor: pointer;
   overflow: hidden;
-  perspective: 1600px;
-  background: var(--paper-cream);
 }
 
+/* no backdrop anymore — we want the real page showing through */
 .splash-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  /* darker backdrop that's only visible through the torn gap; gives depth */
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(30,20,10,0.55), rgba(20,12,4,0.85) 70%);
+  display: none;
 }
 
-/* A dark vertical shadow that appears behind the seam once it opens,
-   making the tear feel like a real gap rather than a line painted on top. */
+/* Dark crack shadow behind the seam — scales from 0 width on the seam line
+   to wide as the halves pull apart. Keeps the torn edges reading as a gap,
+   not a line. */
 .splash-seam-shadow {
   position: absolute;
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 80px;
-  margin-left: -40px;
+  width: 4px;
+  margin-left: -2px;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(10,6,2,0.55) 45%, rgba(10,6,2,0.55) 55%, transparent);
+  background: linear-gradient(90deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.25));
   opacity: 0;
-  transform: scaleY(0);
-  transform-origin: top center;
+  transform: scaleX(1);
+  transform-origin: center;
   transition: opacity 200ms ease;
 }
 
-/* Each half is a full-viewport div carrying the whole splash face;
-   the clip-path isolates it to the correct side. */
+/* Each half is a full-viewport sheet of paper; clip-path isolates to its side. */
 .splash-half {
   position: absolute;
   inset: 0;
@@ -99,11 +93,10 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   padding: 0 1.5rem;
   will-change: transform, opacity;
   background:
-    radial-gradient(ellipse at 25% 15%, rgba(255,255,240,0.5), transparent 55%),
-    radial-gradient(ellipse at 75% 85%, rgba(139,90,43,0.05), transparent 55%),
+    radial-gradient(ellipse at 25% 15%, rgba(255,255,240,0.55), transparent 55%),
+    radial-gradient(ellipse at 75% 85%, rgba(139,90,43,0.06), transparent 55%),
     var(--paper-cream);
   backface-visibility: hidden;
-  transition: transform 300ms ease;
 }
 
 /* paper fiber overlay */
@@ -119,6 +112,16 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   opacity: 0.45;
 }
 
+/* soft inner shadow along the torn edge */
+.splash-half::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.12);
+}
+
 .splash-face {
   width: 100%;
   display: flex;
@@ -129,18 +132,13 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   pointer-events: none;
 }
 
-/* Left half rotates/hinges on its left edge (stays "held");
-   right half rotates/hinges on its right edge so the seam side lifts toward the viewer. */
+/* Hinge each half on its OUTER edge so the torn seam side is what moves,
+   and add a slight rotation as it slides off-screen — reads like paper
+   being pulled apart, not a rigid curtain. */
 .splash-left  { transform-origin: 0% 50%; }
 .splash-right { transform-origin: 100% 50%; }
 
-/* Shadow under the right half grows during the peel */
-.splash-right {
-  filter: drop-shadow(0 0 0 rgba(0,0,0,0));
-  transition: filter 250ms ease;
-}
-
-/* Washi layers sit on top of each half but share its clip-path */
+/* Washi layer */
 .splash-washi-layer {
   position: absolute;
   inset: 0;
@@ -150,53 +148,40 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
 
 /* ---- animations ---- */
 
-/* The held right edge stays fixed; the seam side (left of the right half)
-   lifts toward the camera. Negative rotateY around the right-edge origin
-   makes the seam arc forward and away from the left half. */
-@keyframes splash-right-peel {
-  0% {
-    transform: rotateY(0deg) translateX(0) translateZ(0) rotateZ(0deg);
-  }
-  40% {
-    transform: rotateY(-22deg) translateX(2vw) translateZ(40px) rotateZ(1deg);
-  }
-  100% {
-    transform: rotateY(-55deg) translateX(8vw) translateZ(130px) rotateZ(4deg);
-  }
+/* Small pre-tear "pull" where the halves barely separate while the line draws,
+   then they yank apart. Split into tearing + falling stages for timing control. */
+@keyframes splash-right-pull {
+  0%   { transform: translateX(0)   rotate(0deg); }
+  100% { transform: translateX(10vw) rotate(2.5deg); }
+}
+@keyframes splash-left-pull {
+  0%   { transform: translateX(0)    rotate(0deg); }
+  100% { transform: translateX(-10vw) rotate(-2.5deg); }
 }
 
-/* The left half barely moves — only a tiny counter-tilt to sell "being held" */
-@keyframes splash-left-flex {
-  0%   { transform: rotateY(0deg)  translateX(0); }
-  100% { transform: rotateY(2deg)  translateX(-0.3vw); }
-}
-
-/* Right half falls first with some angular momentum */
+/* Fall/slide-off — halves accelerate off-screen with a bit more rotation. */
 @keyframes splash-right-fall {
   0% {
-    transform: rotateY(-55deg) translateX(8vw) translateZ(130px) rotateZ(4deg);
+    transform: translate(10vw, 0) rotate(2.5deg);
     opacity: 1;
   }
   100% {
-    transform: rotateY(-25deg) translate(14vw, 120vh) rotateZ(28deg);
-    opacity: 0.15;
+    transform: translate(120vw, 8vh) rotate(14deg);
+    opacity: 0;
   }
 }
-
-/* Left half follows shortly after */
 @keyframes splash-left-fall {
   0% {
-    transform: rotateY(2deg) translateX(-0.3vw);
+    transform: translate(-10vw, 0) rotate(-2.5deg);
     opacity: 1;
   }
   100% {
-    transform: rotateY(-8deg) translate(-10vw, 120vh) rotateZ(-18deg);
-    opacity: 0.15;
+    transform: translate(-120vw, 8vh) rotate(-14deg);
+    opacity: 0;
   }
 }
 
-/* Tear line — SVG paths have pathLength=100 set on the element,
-   so stroke-dasharray/offset = 100 gives a clean top-to-bottom draw. */
+/* Tear line — pathLength=100 so dasharray/offset interpolate cleanly */
 .splash-tear-line {
   position: absolute;
   inset: 0;
@@ -215,8 +200,8 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
 }
-.splash-tear-ink       { stroke: rgba(40, 26, 14, 0.92); stroke-width: 2.2; }
-.splash-tear-highlight { stroke: rgba(255, 248, 230, 0.85); stroke-width: 5.5; filter: blur(1.8px); }
+.splash-tear-ink       { stroke: rgba(40, 26, 14, 0.85); stroke-width: 1.8; }
+.splash-tear-highlight { stroke: rgba(255, 248, 230, 0.9); stroke-width: 4; filter: blur(1.5px); }
 
 @keyframes splash-tear-draw {
   0%   { stroke-dashoffset: 100; }
@@ -225,41 +210,37 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
 
 /* ---- stage machine ---- */
 
-/* tearing: right half peels + seam draws + dark gap widens beneath it */
+/* tearing: seam draws top→bottom while halves pull apart slightly */
 [data-stage="tearing"] .splash-right {
-  animation: splash-right-peel 1200ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
-  filter: drop-shadow(-18px 12px 22px rgba(0,0,0,0.35));
+  animation: splash-right-pull 950ms cubic-bezier(0.45, 0, 0.25, 1) forwards;
 }
 [data-stage="tearing"] .splash-left {
-  animation: splash-left-flex 1200ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  animation: splash-left-pull 950ms cubic-bezier(0.45, 0, 0.25, 1) forwards;
 }
 [data-stage="tearing"] .splash-tear-line {
   opacity: 1;
-  transition: opacity 150ms ease-out;
+  transition: opacity 120ms ease-out;
 }
 [data-stage="tearing"] .splash-tear-ink,
 [data-stage="tearing"] .splash-tear-highlight {
-  animation: splash-tear-draw 1150ms cubic-bezier(0.5, 0.05, 0.35, 1) forwards;
+  animation: splash-tear-draw 900ms cubic-bezier(0.5, 0.05, 0.3, 1) forwards;
 }
 [data-stage="tearing"] .splash-seam-shadow {
   opacity: 1;
-  transform: scaleY(1);
-  transform-origin: top center;
-  transition: transform 1150ms cubic-bezier(0.5, 0.05, 0.35, 1), opacity 200ms ease 100ms;
+  transition: opacity 200ms ease 100ms;
 }
 
-/* falling: right drops first, left follows ~180ms later, seam shadow fades */
+/* falling: halves slide fully off-screen */
 [data-stage="falling"] .splash-right {
-  animation: splash-right-fall 750ms cubic-bezier(0.45, 0.05, 0.65, 0.95) forwards;
-  filter: drop-shadow(0 30px 22px rgba(0,0,0,0.3));
+  animation: splash-right-fall 700ms cubic-bezier(0.45, 0.05, 0.65, 0.95) forwards;
 }
 [data-stage="falling"] .splash-left {
-  animation: splash-left-fall 780ms cubic-bezier(0.45, 0.05, 0.65, 0.95) 180ms forwards;
+  animation: splash-left-fall 700ms cubic-bezier(0.45, 0.05, 0.65, 0.95) forwards;
 }
 [data-stage="falling"] .splash-tear-line,
 [data-stage="falling"] .splash-seam-shadow {
   opacity: 0;
-  transition: opacity 200ms ease-out;
+  transition: opacity 250ms ease-out;
 }
 
 /* legacy helpers kept as no-ops so external callers using `leaving` don't break */

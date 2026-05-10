@@ -255,13 +255,13 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
     audioRef.current = audio;
     audio.play().catch(() => { /* autoplay blocked — animation still runs */ });
 
-    // Tear phase: seam draws from top to bottom while right half peels forward.
     setStage("tearing");
+    // Tear phase: seam draws + halves pull apart slightly (~950ms).
     const t1 = setTimeout(() => {
       setStage("falling");
-      // Unmount in parallel with the fall; App waits ~1000ms for the pieces to exit.
+      // Fire onEnter now; App will unmount the splash ~700ms later as the halves slide off.
       onEnter();
-    }, 1300);
+    }, 950);
 
     return () => clearTimeout(t1);
   }, [onEnter]);
@@ -304,10 +304,7 @@ export function Splash({ onEnter, leaving: _leaving, name, splashText }: {
         .splash-right-clip { clip-path: ${RIGHT_POLYGON}; -webkit-clip-path: ${RIGHT_POLYGON}; }
       `}</style>
 
-      {/* backdrop behind the paper — darkens slightly so peeled half reads as "in front" */}
-      <div className="splash-backdrop" />
-
-      {/* dark gap that appears behind the seam as the pieces separate */}
+      {/* dark gap shadow behind the seam */}
       <div className="splash-seam-shadow" aria-hidden />
 
       {/* washi tape layers — each clipped to its side so tape doesn't float across the seam */}
