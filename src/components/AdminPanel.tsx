@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import type {
   AppConfig, SectionKey, FavoritesItem, GuestbookEntry, StickerItem,
-  RecentItem, StuffItem, YTTrack, PortfolioProject, GuitarCover,
+  RecentItem, YTTrack, PortfolioProject, GuitarCover,
 } from "../lib/config";
 import { uid, popHistory, clearHistory, pushHistory, mergeConfig, DEFAULT_CONFIG } from "../lib/config";
 import type { CustomPalette } from "../lib/palettes";
@@ -297,9 +297,6 @@ export function AdminPanel({
 
           {/* ===== recent ===== */}
           <RecentEditor config={config} set={set} />
-
-          {/* ===== stuff i made ===== */}
-          <StuffEditor config={config} set={set} />
 
           {/* ===== portfolio ===== */}
           <PortfolioEditor config={config} set={set} />
@@ -728,42 +725,6 @@ function RecentEditor({ config, set }: { config: AppConfig; set: Setter }) {
                 <span className="text-xs palette-text-muted">or fallback: {r.emoji}</span>
               </div>
             )}
-          </div>
-        ))}
-        <button className={btnCls} onClick={add}><Plus size={12} /> add</button>
-      </div>
-    </>
-  );
-}
-
-/* ===================== Stuff i made editor ===================== */
-
-function StuffEditor({ config, set }: { config: AppConfig; set: Setter }) {
-  function update(i: number, patch: Partial<StuffItem>) {
-    set((c) => ({ ...c, stuffIMade: c.stuffIMade.map((e, idx) => idx === i ? { ...e, ...patch } : e) }));
-  }
-  function add() {
-    pushHistory(config);
-    set((c) => ({ ...c, stuffIMade: c.stuffIMade.concat({ emoji: "✨", title: "thing", blurb: "edit me", tag: "wip", url: "" }) }));
-  }
-  function remove(i: number) {
-    pushHistory(config);
-    set((c) => ({ ...c, stuffIMade: c.stuffIMade.filter((_, idx) => idx !== i) }));
-  }
-  return (
-    <>
-      <H icon={<Award size={14} />}>stuff i made</H>
-      <div className="space-y-1">
-        {config.stuffIMade.map((p, i) => (
-          <div key={i} className="palette-surface-strong rounded-lg p-2 space-y-1">
-            <div className="grid grid-cols-[40px_1fr_80px] gap-2 items-center">
-              <input className={inputCls} value={p.emoji} onChange={(e) => update(i, { emoji: e.target.value })} />
-              <input className={inputCls} value={p.title} onChange={(e) => update(i, { title: e.target.value })} placeholder="title" />
-              <input className={inputCls} value={p.tag} onChange={(e) => update(i, { tag: e.target.value })} placeholder="tag" />
-            </div>
-            <textarea className={textareaCls} rows={2} value={p.blurb} onChange={(e) => update(i, { blurb: e.target.value })} placeholder="blurb" />
-            <input className={inputCls} value={p.url || ""} onChange={(e) => update(i, { url: e.target.value })} placeholder="optional url" />
-            <button className={btnCls} onClick={() => remove(i)}><Trash2 size={12} /> delete</button>
           </div>
         ))}
         <button className={btnCls} onClick={add}><Plus size={12} /> add</button>

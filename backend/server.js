@@ -187,15 +187,6 @@ async function readConfig() {
         }
       ],
       "recent": [],
-      "stuffIMade": [
-        {
-          "emoji": "✨",
-          "title": "this bio!",
-          "blurb": "yeah its so cool i know guys",
-          "tag": "wip",
-          "url": ""
-        }
-      ],
       "comments": [
         {
           "id": "1778327008325",
@@ -300,7 +291,6 @@ async function readConfig() {
         "guestbook",
         "stickers",
         "steam",
-        "stuffIMade",
         "footer"
       ]
     };

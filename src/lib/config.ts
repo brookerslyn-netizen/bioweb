@@ -13,7 +13,6 @@ export type SectionKey =
   | "guestbook"
   | "stickers"
   | "steam"
-  | "stuffIMade"
   | "footer";
 
 export type FavoritesItem = { emoji: string; label: string; note: string; imageUrl?: string };
@@ -29,7 +28,6 @@ export type CommentEntry = {
 };
 export type StickerItem = { id: string; emoji: string; label: string; imageUrl?: string };
 export type RecentItem = { id: string; emoji: string; text: string; imageUrl?: string };
-export type StuffItem = { emoji: string; title: string; blurb: string; tag: string; url?: string };
 export type YTTrack = { id: string; title: string; artist?: string };
 export type PortfolioProject = { id: string; title: string; blurb: string; tag: string; url?: string; imageUrl?: string; emoji: string };
 export type GuitarCover = {
@@ -97,7 +95,6 @@ export type AppConfig = {
   guestbook: GuestbookEntry[];
   stickers: StickerItem[];
   recent: RecentItem[];
-  stuffIMade: StuffItem[];
   comments: CommentEntry[];
   portfolio: PortfolioProject[];
   guitarCovers: GuitarCover[];
@@ -204,7 +201,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   guestbook: [],
   stickers: [],
   recent: [],
-  stuffIMade: [],
   comments: [],
   portfolio: [],
   guitarCovers: [],
@@ -299,6 +295,16 @@ export async function loadConfig(): Promise<AppConfig> {
 }
 
 export function mergeConfig(base: AppConfig, override: Partial<AppConfig>): AppConfig {
+  // Known section keys used to filter out stale/removed entries that might
+  // live in older saved configs (e.g. "stuffIMade" before it was removed).
+  const VALID_SECTIONS: ReadonlySet<SectionKey> = new Set<SectionKey>([
+    "hero", "marquee", "about", "now", "connections",
+    "recent", "favorites", "guestbook", "stickers", "steam", "footer",
+  ]);
+
+  const rawOrder = override.sectionOrder ?? base.sectionOrder;
+  const cleanedOrder = rawOrder.filter((k): k is SectionKey => VALID_SECTIONS.has(k as SectionKey));
+
   return {
     ...base,
     ...override,
@@ -318,11 +324,10 @@ export function mergeConfig(base: AppConfig, override: Partial<AppConfig>): AppC
     guestbook: override.guestbook ?? base.guestbook,
     stickers: override.stickers ?? base.stickers,
     recent: override.recent ?? base.recent,
-    stuffIMade: override.stuffIMade ?? base.stuffIMade,
     comments: override.comments ?? base.comments,
     portfolio: override.portfolio ?? base.portfolio,
     guitarCovers: override.guitarCovers ?? base.guitarCovers,
-    sectionOrder: override.sectionOrder ?? base.sectionOrder,
+    sectionOrder: cleanedOrder.length ? cleanedOrder : base.sectionOrder,
   };
 }
 

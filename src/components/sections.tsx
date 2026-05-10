@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Eye, MessageSquare, Sparkles, Star, Calendar, Award } from "lucide-react";
+import { ChevronDown, Eye, MessageSquare, Sparkles, Star, Calendar } from "lucide-react";
 import type { AppConfig, FavoritesItem } from "../lib/config";
 import { splitLines, splitTags } from "../lib/config";
 import { Reveal, RansomNote, Typewriter, LiveClock, Doodle, useViewCount } from "./parts";
@@ -391,47 +391,6 @@ export function SteamSection({ config }: { config: AppConfig }) {
     <section id="steam" className="px-6 py-8 max-w-4xl mx-auto">
       <Reveal>
         <SteamCard steamId={config.contact.steamId} />
-      </Reveal>
-    </section>
-  );
-}
-
-/* ===================== Stuff i made ===================== */
-
-export function StuffIMadeSection({ config }: { config: AppConfig }) {
-  return (
-    <section id="stuffIMade" className="px-6 py-8 max-w-5xl mx-auto">
-      <Reveal>
-        <h2 className="palette-text mb-3" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
-          stuff i made <Award size={22} className="inline" />
-        </h2>
-        {config.stuffIMade.length === 0 ? (
-          <div className="paper paper-2 p-6 text-center palette-text-muted italic" style={{ color: "var(--paper-ink-soft)" }}>
-            nothing here yet — add via the admin panel
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-4">
-            {config.stuffIMade.map((p, i) => {
-              const Tag = p.url ? "a" : "div";
-              const props = p.url ? { href: p.url, target: "_blank", rel: "noreferrer" } : {};
-              return (
-                <Tag
-                  key={i}
-                  {...props}
-                  className="paper p-5 block hover:scale-[1.01] transition-transform"
-                  style={{ transform: `rotate(${(i % 2 === 0 ? -1 : 1) * 1.2}deg)` }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="text-3xl">{p.emoji}</div>
-                    <span className="text-[10px] uppercase tracking-widest font-mono px-2 py-1 rounded-full paper-2 paper-text">{p.tag}</span>
-                  </div>
-                  <h3 className="mt-2 paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 26 }}>{p.title}</h3>
-                  <p className="text-sm paper-text-muted" style={{ fontFamily: "'Indie Flower', cursive" }}>{p.blurb}</p>
-                </Tag>
-              );
-            })}
-          </div>
-        )}
       </Reveal>
     </section>
   );

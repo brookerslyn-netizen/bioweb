@@ -87,7 +87,6 @@ async function readConfig() {
       guestbook: [],
       stickers: [],
       recent: [],
-      stuffIMade: [],
       comments: [],
       stickyNote: {
         enabled: false,
@@ -114,7 +113,7 @@ async function readConfig() {
         polaroidFlip: true,
       },
       sectionOrder: [
-        "hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "stuffIMade", "footer"
+        "hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "footer"
       ],
     };
     await writeConfig(defaultConfig);
