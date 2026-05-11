@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Music2,
   Disc3,
@@ -14,6 +15,7 @@ import {
   Copy,
   Check,
   Gamepad2,
+  Film,
 } from "lucide-react";
 import type { LanyardSpotify } from "./parts";
 import { useLanyard } from "./parts";
@@ -563,6 +565,14 @@ export function MusicPlayer({
   const [externalTrack, setExternalTrack] = useState<{ title: string; artist: string } | null>(null);
   // Track the actual YT video ID currently loaded (may differ from queue[idx].id when external)
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  // Background video mode — renders a fullscreen iframe behind the page that
+  // mirrors the audio player's video so MVs can play as a live backdrop.
+  const [bgVideo, setBgVideo] = useState<boolean>(() => {
+    try { return localStorage.getItem("brook-bg-video") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("brook-bg-video", bgVideo ? "1" : "0"); } catch { /* ignore */ }
+  }, [bgVideo]);
   const playerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -792,10 +802,162 @@ export function MusicPlayer({
           </button>
           <button onClick={next} className="paper-text hover:paper-text" title="next"><SkipForward size={20} /></button>
         </div>
-        <button onClick={() => setMuted((m) => !m)} className="paper-text-muted hover:paper-text" title={muted ? "unmute" : "mute"}>
-          {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setBgVideo((v) => !v)}
+            title={bgVideo ? "hide background video" : "make video the background"}
+            className={`transition-colors ${bgVideo ? "paper-text" : "paper-text-muted hover:paper-text"}`}
+          >
+            <Film size={16} />
+          </button>
+          <button onClick={() => setMuted((m) => !m)} className="paper-text-muted hover:paper-text" title={muted ? "unmute" : "mute"}>
+            {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+        </div>
       </div>
+
+      {/* Background video — renders behind the whole site, synced to the audio player */}
+      {bgVideo && activeVideoId && (
+        <BackgroundVideo
+          videoId={activeVideoId}
+          getTime={() => playerRef.current?.getCurrentTime() ?? 0}
+          playing={playing}
+        />
+      )}
     </div>
+  );
+}
+
+/* ===================== Background video =====================
+ * Renders a muted fullscreen iframe behind the whole page, playing the same
+ * YouTube video as the audio-only MusicPlayer. Kept in sync by polling the
+ * main player's getCurrentTime() and seeking this one when they drift.
+ *
+ * Why a second iframe instead of promoting the audio player's iframe? The
+ * audio player's iframe is 0×0 and lives in a fixed card so it can't fill the
+ * viewport without breaking the audio controls. A sibling iframe mirrors the
+ * playback cheaply while the original keeps driving audio + state.
+ */
+function BackgroundVideo({
+  videoId,
+  getTime,
+  playing,
+}: {
+  videoId: string;
+  getTime: () => number;
+  playing: boolean;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<YTPlayer | null>(null);
+  const [ready, setReady] = useState(false);
+
+  // (re)create the player when the video changes
+  useEffect(() => {
+    let cancelled = false;
+    setReady(false);
+    loadYTApi().then(() => {
+      if (cancelled || !wrapRef.current) return;
+      // clean slate
+      wrapRef.current.innerHTML = "";
+      const host = document.createElement("div");
+      wrapRef.current.appendChild(host);
+      const startAt = Math.max(0, Math.floor(getTime()));
+      playerRef.current = new window.YT!.Player(host, {
+        width: "100%",
+        height: "100%",
+        videoId,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          disablekb: 1,
+          modestbranding: 1,
+          playsinline: 1,
+          mute: 1,
+          start: startAt,
+          rel: 0,
+          iv_load_policy: 3,
+          fs: 0,
+        },
+        events: {
+          onReady: (e: { target: YTPlayer }) => {
+            e.target.setVolume(0);
+            if (playing) e.target.playVideo(); else e.target.pauseVideo();
+            setReady(true);
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      try { playerRef.current?.destroy(); } catch { /* ignore */ }
+      playerRef.current = null;
+    };
+  }, [videoId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // mirror play/pause
+  useEffect(() => {
+    if (!ready || !playerRef.current) return;
+    if (playing) playerRef.current.playVideo();
+    else playerRef.current.pauseVideo();
+  }, [playing, ready]);
+
+  // keep the bg video in sync with the audio player
+  useEffect(() => {
+    if (!ready) return;
+    const iv = setInterval(() => {
+      const p = playerRef.current;
+      if (!p) return;
+      const bgTime = p.getCurrentTime();
+      const audioTime = getTime();
+      const drift = Math.abs(bgTime - audioTime);
+      if (drift > 0.6) {
+        // resync via loadVideoById with startSeconds — fastest way to jump
+        // without a full reload. YouTube's seekTo isn't part of our exposed
+        // player type so we reuse loadVideoById for the jump.
+        p.loadVideoById({ videoId, startSeconds: Math.max(0, Math.floor(audioTime)) });
+      }
+    }, 2500);
+    return () => clearInterval(iv);
+  }, [ready, videoId, getTime]);
+
+  return createPortal(
+    <div
+      ref={wrapRef}
+      aria-hidden
+      className="bg-yt-fill"
+      style={{
+        position: "fixed",
+        inset: 0,
+        // sit above the bg gif (-1) but below main content (which lives at z-1+)
+        zIndex: 0,
+        pointerEvents: "none",
+        overflow: "hidden",
+      }}
+    >
+      <style>{`
+        .bg-yt-fill > div, .bg-yt-fill iframe {
+          position: absolute !important;
+          top: 50% !important;
+          left: 50% !important;
+          width: max(100vw, 177.78vh) !important;
+          height: max(56.25vw, 100vh) !important;
+          transform: translate(-50%, -50%) !important;
+          pointer-events: none !important;
+        }
+      `}</style>
+      {/* darkening overlay so page content stays readable — rendered after the
+          iframe via stacking context so it sits on top */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          background: "rgba(0,0,0,0.45)",
+          pointerEvents: "none",
+        }}
+      />
+    </div>,
+    document.body,
   );
 }
