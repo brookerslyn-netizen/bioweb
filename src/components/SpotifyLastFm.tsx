@@ -276,6 +276,17 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
             }
           </div>
         </div>
+        {/* play-along button — fetches brook's exact Spotify position, finds a
+            YouTube match, and seeks the persistent MusicPlayer to that second.
+            Shows the current position / total duration like "1:25 / 2:56". */}
+        {nowPlaying && (
+          <NowPlayingPlayAlong
+            track={nowPlaying}
+            isPlaying={playingTrackUrl === nowPlaying.url}
+            isSearching={searchingTrackUrl === nowPlaying.url}
+            onPlay={handlePlayTrack}
+          />
+        )}
         <a
           href={spotifyUrl}
           target="_blank"
@@ -513,6 +524,126 @@ function humanizeMinutes(totalMinutes: number): string {
   return `${formatInt(Math.round(totalMinutes))} minutes`;
 }
 
+/* ===================== Play-along button for now-playing ===================== */
+
+function fmtTime(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = (totalSec % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function NowPlayingPlayAlong({
+  track,
+  isPlaying,
+  isSearching: parentSearching,
+  onPlay,
+}: {
+  track: LastFmTrack;
+  isPlaying: boolean;
+  isSearching: boolean;
+  onPlay: (track: LastFmTrack, e: React.MouseEvent) => void;
+}) {
+  const [progressMs, setProgressMs] = useState<number | null>(null);
+  const [durationMs, setDurationMs] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll the backend for the current playback position every 5s while visible.
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const r = await fetch(`${API_BASE}/spotify/now-playing`);
+        if (!r.ok) return;
+        const data = await r.json();
+        if (cancelled) return;
+        if (data.isPlaying && data.track) {
+          setProgressMs(data.progressMs ?? null);
+          setDurationMs(data.track.durationMs ?? null);
+        } else {
+          setProgressMs(null);
+          setDurationMs(null);
+        }
+      } catch { /* ignore */ }
+    };
+    poll();
+    pollingRef.current = setInterval(poll, 5000);
+    return () => { cancelled = true; if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, [track.url]);
+
+  const handleClick = async (e: React.MouseEvent) => {
+    if (isPlaying) {
+      // stop
+      onPlay(track, e);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Fetch fresh position right before playing so we're as close as possible
+      const r = await fetch(`${API_BASE}/spotify/now-playing`);
+      let startSeconds = 0;
+      if (r.ok) {
+        const data = await r.json();
+        if (data.isPlaying && data.progressMs) {
+          startSeconds = Math.floor(data.progressMs / 1000);
+          setProgressMs(data.progressMs);
+          setDurationMs(data.track?.durationMs ?? durationMs);
+        }
+      }
+
+      // YouTube search
+      const query = encodeURIComponent(`${track.name} ${track.artist["#text"]}`);
+      const ytRes = await fetch(`${API_BASE}/youtube/search?q=${query}`);
+      if (!ytRes.ok) throw new Error("Search failed");
+      const ytData = await ytRes.json();
+
+      // Dispatch with startSeconds so MusicPlayer seeks to brook's position
+      window.dispatchEvent(
+        new CustomEvent(PLAY_YT_TRACK_EVENT, {
+          detail: {
+            videoId: ytData.videoId,
+            title: track.name,
+            artist: track.artist["#text"],
+            startSeconds,
+          },
+        }),
+      );
+    } catch { /* silently fail */ } finally {
+      setLoading(false);
+    }
+  };
+
+  const showTime = progressMs != null && durationMs != null && durationMs > 0;
+  const busy = loading || parentSearching;
+
+  return (
+    <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
+      <button
+        onClick={handleClick}
+        title={isPlaying ? "stop" : "play along"}
+        aria-label={isPlaying ? "stop playback" : "play along"}
+        className="w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform"
+        style={{ background: "var(--p-accent)", color: "var(--p-accent-contrast)" }}
+      >
+        {busy ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : isPlaying ? (
+          <Pause size={16} />
+        ) : (
+          <Play size={16} className="ml-0.5" />
+        )}
+      </button>
+      {showTime && (
+        <span className="text-[10px] font-mono paper-text-muted tabular-nums whitespace-nowrap">
+          {fmtTime(progressMs)} / {fmtTime(durationMs)}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function ScrobbleStats({ info }: { info: LastFmUserInfo }) {
   const plays = parseInt(info.playcount, 10) || 0;
   const registeredSec = parseInt(info.registered?.unixtime || "0", 10) || 0;
@@ -532,7 +663,7 @@ function ScrobbleStats({ info }: { info: LastFmUserInfo }) {
 
   const tooltipText = years >= 0.25
     ? `averaging ~${AVG_MINUTES}-minute tracks, that's the equivalent of listening to music for ${listenSpan}!`
-    : `${formatInt(plays)} scrobbles since your account was made`;
+    : `${formatInt(plays)} scrobbles since my account was made`;
 
   return (
     <div className="mt-3 px-3 py-2 rounded-lg paper-2 paper-text flex items-center gap-2 text-xs md:text-sm">

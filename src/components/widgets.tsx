@@ -255,7 +255,7 @@ declare global {
 }
 
 type YTPlayer = {
-  loadVideoById: (id: string) => void;
+  loadVideoById: (id: string | { videoId: string; startSeconds?: number; endSeconds?: number }) => void;
   cueVideoById: (id: string) => void;
   playVideo: () => void;
   pauseVideo: () => void;
@@ -399,7 +399,9 @@ export function MusicPlayer({
   useEffect(() => {
     if (!enabled) return;
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { videoId: string; title: string; artist: string } | null;
+      const detail = (e as CustomEvent).detail as
+        | { videoId: string; title: string; artist: string; startSeconds?: number }
+        | null;
       if (!detail) {
         setExternalTrack(null);
         setActiveVideoId(null);
@@ -408,7 +410,16 @@ export function MusicPlayer({
       }
       setExternalTrack({ title: detail.title, artist: detail.artist });
       setActiveVideoId(detail.videoId);
-      playerRef.current?.loadVideoById(detail.videoId);
+      // loadVideoById({ videoId, startSeconds }) is the YT.Player signature
+      // that jumps straight to the timestamp, used for play-along.
+      if (typeof detail.startSeconds === "number" && detail.startSeconds > 0) {
+        playerRef.current?.loadVideoById({
+          videoId: detail.videoId,
+          startSeconds: detail.startSeconds,
+        });
+      } else {
+        playerRef.current?.loadVideoById(detail.videoId);
+      }
       playerRef.current?.playVideo();
     };
     window.addEventListener("play-yt-track", handler);

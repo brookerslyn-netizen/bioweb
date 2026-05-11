@@ -340,7 +340,9 @@ app.get('/api/spotify/auth', (req, res) => {
     return res.status(500).json({ error: 'Spotify not configured' });
   }
   
-  const scope = 'user-read-recently-played';
+  // user-read-currently-playing gives us the active track + progress_ms so
+  // the play-along button can seek the YouTube proxy to brook's exact position.
+  const scope = 'user-read-recently-played user-read-currently-playing';
   const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${SPOTIFY_CLIENT_ID}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}`;
   
   res.json({ authUrl });
@@ -470,6 +472,64 @@ app.get('/api/spotify/recent', async (req, res) => {
   } catch (error) {
     console.error('Error fetching recent tracks:', error);
     res.status(500).json({ error: 'Failed to fetch recent tracks' });
+  }
+});
+
+// Currently playing — returns the active track + progress_ms so the frontend
+// can seek its YouTube proxy to the exact moment brook is at on Spotify.
+app.get('/api/spotify/now-playing', async (req, res) => {
+  if (!spotifyTokens.accessToken) {
+    return res.status(401).json({ error: 'Spotify not connected', needsAuth: true });
+  }
+
+  if (Date.now() >= spotifyTokens.expiresAt - 60000) {
+    const refreshed = await refreshSpotifyToken();
+    if (!refreshed) {
+      return res.status(401).json({ error: 'Token expired', needsAuth: true });
+    }
+  }
+
+  try {
+    const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing?market=from_token', {
+      headers: { 'Authorization': `Bearer ${spotifyTokens.accessToken}` },
+    });
+
+    // 204 means Spotify has nothing to report (player idle)
+    if (response.status === 204) {
+      return res.json({ isPlaying: false });
+    }
+    if (response.status === 401) {
+      return res.status(401).json({ error: 'Token expired', needsAuth: true });
+    }
+    if (!response.ok) {
+      throw new Error(`Spotify API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const item = data?.item;
+    if (!item) {
+      return res.json({ isPlaying: false });
+    }
+
+    res.json({
+      isPlaying: Boolean(data.is_playing),
+      progressMs: data.progress_ms ?? 0,
+      // Spotify gives us fetched-at implicitly via server time; echo it so the
+      // client can account for network + polling latency when seeking.
+      timestampMs: data.timestamp ?? Date.now(),
+      track: {
+        id: item.id,
+        name: item.name,
+        artist: item.artists.map((a) => a.name).join(', '),
+        album: item.album?.name || '',
+        image: item.album?.images?.[0]?.url || '',
+        durationMs: item.duration_ms,
+        uri: item.uri,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching now-playing:', error);
+    res.status(500).json({ error: 'Failed to fetch now-playing' });
   }
 });
 
