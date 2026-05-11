@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pencil, ChevronUp, Music2 } from "lucide-react";
+import { Pencil, ChevronLeft, Music2 } from "lucide-react";
 import "./App.css";
 import bgGif from "./assets/bg/dreamy.gif";
 
@@ -397,10 +397,10 @@ function App() {
 export default App;
 
 /* ===================== MusicDock =====================
- * Floating collapsible wrapper for the persistent MusicPlayer. The player
- * always stays mounted (so playback survives view switches + keeps going while
- * minimized). When minimized, the card slides down leaving just a small pull-
- * tab at the bottom of the viewport with an upward chevron.
+ * Side-mounted collapsible wrapper for the persistent MusicPlayer. The player
+ * always stays mounted (playback survives view switches + keeps going while
+ * minimized). When minimized, the panel slides off the right edge leaving
+ * just a small pull-tab with a chevron sticking out of the right side.
  *
  * State is persisted to localStorage so the user's preference sticks.
  */
@@ -416,49 +416,49 @@ function MusicDock({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-[45] w-[min(92vw,640px)] pointer-events-none"
-      style={{ bottom: 0 }}
+      className="fixed top-1/2 -translate-y-1/2 right-0 z-[45] pointer-events-none"
     >
-      {/* Dock panel — slides down when minimized so only the tab on top remains. */}
+      {/* Panel — slides off to the right when minimized. */}
       <div
         className="relative pointer-events-auto transition-transform duration-300 ease-out"
         style={{
-          // when minimized, translate the whole card below the fold, leaving the
-          // tab (absolutely positioned, outside this translate) visible.
-          transform: minimized ? "translateY(calc(100% - 0px))" : "translateY(-12px)",
+          width: "min(92vw, 420px)",
+          // when minimized, shift the whole panel off-screen so only the tab remains
+          transform: minimized ? "translateX(100%)" : "translateX(-12px)",
           willChange: "transform",
         }}
       >
-        {/* Pull tab sits on top of the card and stays poking out of the screen
-            when the card slides down. Clicking it toggles state. */}
+        {/* Pull tab sits on the LEFT edge of the panel and stays poking out of
+            the right side of the screen when the panel slides away. */}
         <button
           onClick={() => setMinimized((m) => !m)}
           aria-label={minimized ? "show music player" : "hide music player"}
-          title={minimized ? "pull up" : "hide"}
-          className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 px-4 py-1 shadow-md hover:scale-[1.04] active:scale-95 transition-transform"
+          title={minimized ? "pull out" : "hide"}
+          className="absolute top-1/2 -translate-y-1/2 flex items-center justify-center gap-1 shadow-md hover:scale-[1.04] active:scale-95 transition-transform"
           style={{
-            // sit just above the card's top edge so it reads as a physical tab
-            top: -18,
-            height: 22,
-            minWidth: 72,
-            borderRadius: "10px 10px 0 0",
+            left: -22,
+            width: 22,
+            minHeight: 68,
+            padding: "6px 2px",
+            borderRadius: "10px 0 0 10px",
             background: "var(--p-surface-strong)",
             color: "var(--p-text)",
             border: "1px solid rgba(0,0,0,0.12)",
-            borderBottom: "none",
+            borderRight: "none",
+            flexDirection: "column",
             fontFamily: "'Shadows Into Light', cursive",
-            fontSize: 13,
+            fontSize: 12,
             lineHeight: 1,
           }}
         >
-          <Music2 size={12} />
-          <ChevronUp
+          <ChevronLeft
             size={14}
             style={{
               transition: "transform 250ms ease",
               transform: minimized ? "rotate(0deg)" : "rotate(180deg)",
             }}
           />
+          <Music2 size={12} />
         </button>
 
         {children}
