@@ -420,71 +420,67 @@ export function WebringSection() {
 
   if (error || !data) return null;
 
-  const isMember = data.current !== null;
-
   return (
-    <section id="webring" className="px-6 py-8 max-w-4xl mx-auto">
+    <section id="webring" className="px-6 py-6 max-w-2xl mx-auto">
       <Reveal>
-        <div className="paper p-6 relative tilt-n1">
+        <div className="paper p-4 relative tilt-n1">
           {/* decorative washi tape */}
-          <div className="washi washi-lavender" style={{ top: -10, left: 40, transform: "rotate(-5deg)" }} />
-          <div className="washi washi-pink" style={{ top: -10, right: 50, transform: "rotate(4deg)" }} />
+          <div className="washi washi-lavender" style={{ top: -10, left: 24, width: 60, transform: "rotate(-5deg)" }} />
+          <div className="washi washi-pink" style={{ top: -10, right: 32, width: 50, transform: "rotate(4deg)" }} />
 
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 36 }}>
-              webring
-            </h2>
-            <span className="text-xs font-mono paper-text-muted uppercase tracking-widest">
-              lanyard.cafe
-            </span>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="min-w-0">
+              <div className="flex items-baseline gap-2">
+                <h2 className="paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 24 }}>
+                  webring
+                </h2>
+                <span className="text-[11px] font-mono paper-text-muted uppercase tracking-widest">
+                  lanyard.cafe
+                </span>
+              </div>
+              <p className="text-xs paper-text-muted" style={{ fontFamily: "'Indie Flower', cursive" }}>
+                hop to other weird little sites
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <a
+                href={data.prev.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg paper-2 paper-text hover:scale-[1.05] transition-transform text-sm"
+                style={{ fontFamily: "'Shadows Into Light', cursive" }}
+                title="previous site"
+              >
+                <ChevronLeft size={14} /> prev
+              </a>
+
+              <a
+                href={data.random.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg palette-accent-bg hover:scale-[1.05] transition-transform shadow-sm text-sm"
+                style={{
+                  fontFamily: "'Shadows Into Light', cursive",
+                  color: "var(--p-accent-contrast)",
+                }}
+                title="random site"
+              >
+                <Shuffle size={13} /> random
+              </a>
+
+              <a
+                href={data.next.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg paper-2 paper-text hover:scale-[1.05] transition-transform text-sm"
+                style={{ fontFamily: "'Shadows Into Light', cursive" }}
+                title="next site"
+              >
+                next <ChevronRight size={14} />
+              </a>
+            </div>
           </div>
-
-          <p className="text-sm paper-text-muted mb-4" style={{ fontFamily: "'Indie Flower', cursive" }}>
-            hop around other weird little websites in the ring
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={data.prev.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl paper-2 paper-text hover:scale-[1.04] transition-transform"
-              style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 18 }}
-            >
-              <ChevronLeft size={18} /> prev
-            </a>
-
-            <a
-              href={data.random.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl palette-accent-bg hover:scale-[1.04] transition-transform shadow-sm"
-              style={{
-                fontFamily: "'Shadows Into Light', cursive",
-                fontSize: 18,
-                color: "var(--p-accent-contrast)",
-              }}
-            >
-              <Shuffle size={16} /> random
-            </a>
-
-            <a
-              href={data.next.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl paper-2 paper-text hover:scale-[1.04] transition-transform"
-              style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 18 }}
-            >
-              next <ChevronRight size={18} />
-            </a>
-          </div>
-
-          {isMember && data.current && (
-            <p className="mt-4 text-sm paper-text-muted" style={{ fontFamily: "'Indie Flower', cursive" }}>
-              you're at{" "}
-              <span className="paper-text font-semibold">{data.current.url}</span>
-            </p>
-          )}
         </div>
       </Reveal>
     </section>
