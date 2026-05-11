@@ -312,7 +312,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
         <div className="min-w-0 flex-1">
           <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted flex items-center gap-1.5">
             steam
-            {profile && (
+            {profile && !profile.currentGame && (
               <span className="inline-flex items-center gap-1">
                 <span
                   className="w-2 h-2 rounded-full inline-block"
@@ -325,14 +325,23 @@ export function SteamCard({ steamId }: { steamId: string }) {
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
             {profile?.name || steamId}
           </div>
-          {profile?.currentGame && (
+          {!profile?.currentGame && games.length > 0 && (
             <div className="text-xs paper-text-muted truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
-              ▶ playing <span className="font-medium paper-text">{profile.currentGame}</span>
+              last 2 weeks: {games.length} game{games.length === 1 ? "" : "s"}
             </div>
           )}
         </div>
         <ExternalLink size={14} className="paper-text-muted flex-shrink-0" />
       </a>
+
+      {/* Currently-playing hero card — takes over when brook is in-game */}
+      {profile?.currentGame && (
+        <NowPlayingSteamHero
+          gameName={profile.currentGame}
+          gameId={profile.currentGameId}
+          recent={games}
+        />
+      )}
 
       {/* Recent games */}
       {games.length > 0 && (
@@ -372,6 +381,110 @@ export function SteamCard({ steamId }: { steamId: string }) {
       )}
     </div>
   );
+}
+
+/* In-game hero card — cinematic banner with the Steam header art, a pulsing
+ * "live" indicator, and the game name overlaid in big text. Played time comes
+ * from the recent games list when we can match the game. */
+function NowPlayingSteamHero({
+  gameName,
+  gameId,
+  recent,
+}: {
+  gameName: string;
+  gameId: string | null;
+  recent: SteamRecentGame[];
+}) {
+  // Steam returns gameid as a string; recent games carry appId as a number.
+  // Fall back to a name match if the id doesn't line up.
+  const match = recent.find(
+    (g) => (gameId && String(g.appId) === gameId) || g.name === gameName,
+  );
+  const headerUrl = match?.headerUrl
+    || (gameId ? `https://cdn.akamai.steamstatic.com/steam/apps/${gameId}/header.jpg` : "");
+  const storeUrl = match
+    ? `https://store.steampowered.com/app/${match.appId}`
+    : gameId
+    ? `https://store.steampowered.com/app/${gameId}`
+    : undefined;
+
+  const hoursTotal = match?.playtimeForever;
+  const hours2Weeks = match?.playtime2Weeks;
+
+  const Inner = (
+    <div
+      className="relative rounded-xl overflow-hidden shadow-lg"
+      style={{ aspectRatio: "460 / 215", background: "#0a0f14" }}
+    >
+      {headerUrl && (
+        <img
+          src={headerUrl}
+          alt={gameName}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+        />
+      )}
+      {/* gradient overlay for readability */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 55%, rgba(0,0,0,0.9) 100%)",
+        }}
+      />
+
+      {/* live indicator */}
+      <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] uppercase tracking-widest font-mono"
+        style={{ background: "rgba(34, 197, 94, 0.85)", color: "#062118" }}>
+        <span className="relative inline-flex w-2 h-2">
+          <span className="absolute inline-flex w-full h-full rounded-full animate-ping" style={{ background: "#fff", opacity: 0.7 }} />
+          <span className="relative inline-flex w-full h-full rounded-full" style={{ background: "#fff" }} />
+        </span>
+        in game
+      </div>
+
+      {/* stats pill, top-right */}
+      {(hoursTotal != null) && (
+        <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-mono"
+          style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}>
+          {fmtHours(hoursTotal)} total
+        </div>
+      )}
+
+      {/* title */}
+      <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-widest font-mono" style={{ color: "rgba(255,255,255,0.75)" }}>
+            playing now
+          </div>
+          <div className="font-bold truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22, color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
+            {gameName}
+          </div>
+          {hours2Weeks != null && hours2Weeks > 0 && (
+            <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.75)", fontFamily: "'Indie Flower', cursive" }}>
+              {fmtHours(hours2Weeks)} the last two weeks
+            </div>
+          )}
+        </div>
+        {storeUrl && (
+          <div className="flex-shrink-0 px-2 py-1 rounded-full text-[10px] font-mono flex items-center gap-1"
+            style={{ background: "rgba(255,255,255,0.15)", color: "#fff", backdropFilter: "blur(4px)" }}>
+            store <ExternalLink size={10} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (storeUrl) {
+    return (
+      <a href={storeUrl} target="_blank" rel="noreferrer" className="block hover:scale-[1.01] transition-transform">
+        {Inner}
+      </a>
+    );
+  }
+  return Inner;
 }
 
 /* ===================== Music player (YouTube IFrame API + cassette/vinyl visuals) ===================== */
