@@ -69,7 +69,7 @@ function ProjectCard({ project, index }: { project: PortfolioProject; index: num
       )}
       <div className="flex items-start justify-between gap-2">
         <span className="text-2xl">{project.emoji}</span>
-        <span className="text-[10px] uppercase tracking-widest font-mono px-2 py-0.5 rounded-full paper-2 paper-text">
+        <span className="text-[12px] uppercase tracking-widest font-mono px-2 py-0.5 rounded-full paper-2 paper-text">
           {project.tag}
         </span>
       </div>
@@ -216,7 +216,7 @@ function AudioCover({ cover }: { cover: GuitarCover }) {
           {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
         </button>
 
-        <span className="font-mono text-[11px] tabular-nums" style={{ opacity: 0.85 }}>
+        <span className="font-mono text-[13px] tabular-nums" style={{ opacity: 0.85 }}>
           {fmt(current)}
         </span>
 
@@ -232,7 +232,7 @@ function AudioCover({ cover }: { cover: GuitarCover }) {
           />
         </div>
 
-        <span className="font-mono text-[11px] tabular-nums" style={{ opacity: 0.6 }}>
+        <span className="font-mono text-[13px] tabular-nums" style={{ opacity: 0.6 }}>
           {fmt(duration)}
         </span>
 

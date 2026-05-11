@@ -260,7 +260,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">
             {nowPlaying ? "▶ now playing" : "spotify"}
           </div>
           <div 
@@ -411,11 +411,11 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                         >
                           {track.name}
                         </div>
-                        <div className="text-[10px] paper-text-muted truncate" title={track.artist["#text"]}>
+                        <div className="text-[12px] paper-text-muted truncate" title={track.artist["#text"]}>
                           {track.artist["#text"]}
                         </div>
                         {track.date && (
-                          <div className="text-[9px] paper-text-muted mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="text-[11px] paper-text-muted mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {new Date(parseInt(track.date.uts) * 1000).toLocaleDateString("en-US", { 
                               month: "short", 
                               day: "numeric" 
@@ -486,7 +486,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                       >
                         {artist.name}
                       </div>
-                      <div className="flex items-center justify-center gap-1 text-[10px] paper-text-muted mt-1">
+                      <div className="flex items-center justify-center gap-1 text-[12px] paper-text-muted mt-1">
                         <BarChart2 size={10} />
                         {parseInt(artist.playcount).toLocaleString()}
                       </div>
@@ -636,7 +636,7 @@ function NowPlayingPlayAlong({
         )}
       </button>
       {showTime && (
-        <span className="text-[10px] font-mono paper-text-muted tabular-nums whitespace-nowrap">
+        <span className="text-[12px] font-mono paper-text-muted tabular-nums whitespace-nowrap">
           {fmtTime(progressMs)} / {fmtTime(durationMs)}
         </span>
       )}

@@ -67,7 +67,7 @@ export function SpotifyNowPlaying({
             <Music2 size={20} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">spotify</div>
+            <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">spotify</div>
             <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
               not playing
             </div>
@@ -97,7 +97,7 @@ export function SpotifyNowPlaying({
           <img src={spotify.album_art_url} alt="" className="w-12 h-12 rounded-xl object-cover" />
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">
             now playing on spotify
           </div>
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
@@ -112,7 +112,7 @@ export function SpotifyNowPlaying({
       <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.12)" }}>
         <div className="h-full palette-accent-bg scrub-fill" style={{ width: `${pct}%` }} />
       </div>
-      <div className="mt-1 flex justify-between font-mono text-[10px] paper-text-muted">
+      <div className="mt-1 flex justify-between font-mono text-[12px] paper-text-muted">
         <span>{fmtMs(elapsed)}</span>
         <span>{fmtMs(total)}</span>
       </div>
@@ -149,7 +149,7 @@ export function DiscordCard({ discordId, showCopy }: { discordId: string; showCo
           />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">on discord</div>
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">on discord</div>
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
             {username}
           </div>
@@ -190,7 +190,7 @@ export function EmailCard({ email }: { email: string }) {
         <Mail size={20} />
       </div>
       <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">email</div>
+        <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">email</div>
         <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
           {email}
         </div>
@@ -272,7 +272,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
             <Gamepad2 size={20} />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">steam</div>
+            <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">steam</div>
             <div className="font-semibold paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
               steam id pending
             </div>
@@ -313,7 +313,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted flex items-center gap-1.5">
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted flex items-center gap-1.5">
             steam
             {profile && !profile.currentGame && (
               <span className="inline-flex items-center gap-1">
@@ -349,7 +349,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
       {/* Recent games */}
       {games.length > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">
             recently played
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
@@ -370,10 +370,10 @@ export function SteamCard({ steamId }: { steamId: string }) {
                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
                 <div className="px-2 py-1.5">
-                  <div className="text-[11px] font-medium paper-text truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
+                  <div className="text-[13px] font-medium paper-text truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
                     {g.name}
                   </div>
-                  <div className="text-[10px] paper-text-muted font-mono">
+                  <div className="text-[12px] paper-text-muted font-mono">
                     {fmtHours(g.playtime2Weeks)} · 2wk
                   </div>
                 </div>
@@ -438,7 +438,7 @@ function NowPlayingSteamHero({
       />
 
       {/* live indicator */}
-      <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] uppercase tracking-widest font-mono"
+      <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full text-[12px] uppercase tracking-widest font-mono"
         style={{ background: "rgba(34, 197, 94, 0.85)", color: "#062118" }}>
         <span className="relative inline-flex w-2 h-2">
           <span className="absolute inline-flex w-full h-full rounded-full animate-ping" style={{ background: "#fff", opacity: 0.7 }} />
@@ -449,7 +449,7 @@ function NowPlayingSteamHero({
 
       {/* stats pill, top-right */}
       {(hoursTotal != null) && (
-        <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-mono"
+        <div className="absolute top-2 right-2 px-2 py-1 rounded-full text-[12px] font-mono"
           style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}>
           {fmtHours(hoursTotal)} total
         </div>
@@ -458,20 +458,20 @@ function NowPlayingSteamHero({
       {/* title */}
       <div className="absolute bottom-2 left-3 right-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-widest font-mono" style={{ color: "rgba(255,255,255,0.75)" }}>
+          <div className="text-[12px] uppercase tracking-widest font-mono" style={{ color: "rgba(255,255,255,0.75)" }}>
             playing now
           </div>
           <div className="font-bold truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22, color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
             {gameName}
           </div>
           {hours2Weeks != null && hours2Weeks > 0 && (
-            <div className="text-[11px]" style={{ color: "rgba(255,255,255,0.75)", fontFamily: "'Indie Flower', cursive" }}>
+            <div className="text-[13px]" style={{ color: "rgba(255,255,255,0.75)", fontFamily: "'Indie Flower', cursive" }}>
               {fmtHours(hours2Weeks)} the last two weeks
             </div>
           )}
         </div>
         {storeUrl && (
-          <div className="flex-shrink-0 px-2 py-1 rounded-full text-[10px] font-mono flex items-center gap-1"
+          <div className="flex-shrink-0 px-2 py-1 rounded-full text-[12px] font-mono flex items-center gap-1"
             style={{ background: "rgba(255,255,255,0.15)", color: "#fff", backdropFilter: "blur(4px)" }}>
             store <ExternalLink size={10} />
           </div>
@@ -767,7 +767,7 @@ export function MusicPlayer({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">now playing</div>
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">now playing</div>
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
             {displayTitle}
           </div>
@@ -778,7 +778,7 @@ export function MusicPlayer({
       <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.12)" }}>
         <div className="h-full palette-accent-bg" style={{ width: `${pct}%` }} />
       </div>
-      <div className="mt-1 flex justify-between font-mono text-[10px] paper-text-muted">
+      <div className="mt-1 flex justify-between font-mono text-[12px] paper-text-muted">
         <span>{fmtMs(now * 1000)}</span>
         <span>{dur > 0 ? fmtMs(dur * 1000) : "--:--"}</span>
       </div>

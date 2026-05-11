@@ -18,7 +18,7 @@ export function HeroSection({ config, onNameClick }: { config: AppConfig; onName
       <div className="absolute top-4 left-[15%] washi washi-peach hidden md:block" style={{ width: 60, height: 16, transform: "rotate(-12deg)" }} />
       <div className="absolute top-8 right-[12%] washi washi-lavender hidden md:block" style={{ width: 70, height: 16, transform: "rotate(8deg)" }} />
 
-      <div className="text-[10px] uppercase tracking-[0.4em] font-mono palette-text-muted">
+      <div className="text-[12px] uppercase tracking-[0.4em] font-mono palette-text-muted">
         {config.hero.handle}
       </div>
 
@@ -41,7 +41,7 @@ export function HeroSection({ config, onNameClick }: { config: AppConfig; onName
       </div>
 
       <div className="mt-12 flex flex-col items-center gap-1 palette-text-muted">
-        <span className="text-[10px] uppercase tracking-widest font-mono">
+        <span className="text-[12px] uppercase tracking-widest font-mono">
           {config.hero.scrollHint}
         </span>
         <ChevronDown size={20} className="animate-bounce" />
@@ -89,7 +89,7 @@ export function AboutSection({ config }: { config: AppConfig }) {
           {/* notebook holes on left edge */}
           <div className="notebook-holes hidden md:block" />
 
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono paper-text-muted">
+          <div className="flex items-center gap-2 text-[12px] uppercase tracking-widest font-mono paper-text-muted">
             <span style={{ color: "var(--p-accent)" }}>●</span> who am i
           </div>
           <h2 className="mt-2 paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 48 }}>
@@ -146,7 +146,7 @@ export function NowSection({ config }: { config: AppConfig }) {
         <div className="paper paper-2 p-6 relative tilt-1">
           <div className="washi washi-yellow" style={{ top: -10, right: 30, transform: "rotate(-4deg)" }} />
           <div className="washi washi-lavender" style={{ bottom: -8, left: 50, transform: "rotate(6deg)" }} />
-          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">
             ▸ now
           </div>
           <ul className="mt-3 space-y-2 text-lg paper-text" style={{ fontFamily: "'Indie Flower', cursive" }}>
@@ -432,7 +432,7 @@ export function FooterSection({ config }: { config: AppConfig }) {
       {config.footer.showTransFlair && config.features.transFlair && (
         <div className="mt-8 inline-flex flex-col items-center gap-1">
           <div className="trans-flair-strip" />
-          <span className="text-[10px] uppercase tracking-[0.3em] font-mono palette-text-muted">
+          <span className="text-[12px] uppercase tracking-[0.3em] font-mono palette-text-muted">
             {config.footer.transFlairText}
           </span>
         </div>
