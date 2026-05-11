@@ -890,7 +890,7 @@ function BackgroundVideo({
       wrapRef.current.innerHTML = "";
       const host = document.createElement("div");
       wrapRef.current.appendChild(host);
-      const startAt = Math.max(0, Math.floor(getTime()));
+      const startAt = Math.max(0, Math.floor(getTime() + 1.5));
       playerRef.current = new window.YT!.Player(host, {
         width: "100%",
         height: "100%",
@@ -931,22 +931,27 @@ function BackgroundVideo({
     else playerRef.current.pauseVideo();
   }, [playing, ready]);
 
-  // keep the bg video in sync with the audio player
+  // keep the bg video in sync with the audio player. We intentionally add a
+  // small lead to the target time because the bg iframe takes a beat to
+  // re-buffer after a jump, so without this correction the visuals tend to
+  // land ahead of the audio. Tune SYNC_LEAD_SECONDS if it feels off.
   useEffect(() => {
     if (!ready) return;
+    const SYNC_LEAD_SECONDS = 1.5;
+    const MAX_DRIFT = 0.35;
     const iv = setInterval(() => {
       const p = playerRef.current;
       if (!p) return;
       const bgTime = p.getCurrentTime();
       const audioTime = getTime();
-      const drift = Math.abs(bgTime - audioTime);
-      if (drift > 0.6) {
-        // resync via loadVideoById with startSeconds — fastest way to jump
-        // without a full reload. YouTube's seekTo isn't part of our exposed
-        // player type so we reuse loadVideoById for the jump.
-        p.loadVideoById({ videoId, startSeconds: Math.max(0, Math.floor(audioTime)) });
+      const drift = bgTime - audioTime;
+      // if the bg is more than MAX_DRIFT out of sync in either direction, jump
+      // to the audio position plus the lead window
+      if (Math.abs(drift) > MAX_DRIFT) {
+        const target = Math.max(0, audioTime + SYNC_LEAD_SECONDS);
+        p.loadVideoById({ videoId, startSeconds: Math.floor(target) });
       }
-    }, 2500);
+    }, 1500);
     return () => clearInterval(iv);
   }, [ready, videoId, getTime]);
 
