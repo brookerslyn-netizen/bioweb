@@ -573,6 +573,33 @@ export function MusicPlayer({
   useEffect(() => {
     try { localStorage.setItem("brook-bg-video", bgVideo ? "1" : "0"); } catch { /* ignore */ }
   }, [bgVideo]);
+
+  // Actual YouTube title (used to detect music videos). User-configured queue
+  // titles are short nicknames so we fetch the real one via oEmbed.
+  const [ytTitle, setYtTitle] = useState<string>("");
+  useEffect(() => {
+    if (!activeVideoId) { setYtTitle(""); return; }
+    let cancelled = false;
+    const url = `https://www.youtube.com/oembed?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3D${activeVideoId}&format=json`;
+    fetch(url)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (!cancelled && data?.title) setYtTitle(String(data.title)); })
+      .catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+  }, [activeVideoId]);
+
+  // Heuristic — only surface the "make video the background" button when the
+  // loaded video looks like an actual MV / music video. Covers common tags
+  // used by labels + artists + uploaders.
+  const looksLikeMV = /\b(?:m\/?v|music\s*video|mv|official\s*video|official\s*(?:music\s*)?mv|official\s*audio|official\s*hd\s*video)\b/i
+    .test(ytTitle);
+  // If the user had bg enabled but the current track isn't a recognized MV,
+  // turn the backdrop off so we don't render over a static image.
+  useEffect(() => {
+    if (bgVideo && activeVideoId && ytTitle && !looksLikeMV) {
+      setBgVideo(false);
+    }
+  }, [looksLikeMV, activeVideoId, ytTitle, bgVideo]);
   const playerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trackingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -803,13 +830,15 @@ export function MusicPlayer({
           <button onClick={next} className="paper-text hover:paper-text" title="next"><SkipForward size={20} /></button>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setBgVideo((v) => !v)}
-            title={bgVideo ? "hide background video" : "make video the background"}
-            className={`transition-colors ${bgVideo ? "paper-text" : "paper-text-muted hover:paper-text"}`}
-          >
-            <Film size={16} />
-          </button>
+          {looksLikeMV && (
+            <button
+              onClick={() => setBgVideo((v) => !v)}
+              title={bgVideo ? "hide background video" : "make video the background"}
+              className={`transition-colors ${bgVideo ? "paper-text" : "paper-text-muted hover:paper-text"}`}
+            >
+              <Film size={16} />
+            </button>
+          )}
           <button onClick={() => setMuted((m) => !m)} className="paper-text-muted hover:paper-text" title={muted ? "unmute" : "mute"}>
             {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
