@@ -194,6 +194,7 @@ async function readConfig() {
         "guestbook",
         "stickers",
         "steam",
+        "webring",
         "footer"
       ]
     };

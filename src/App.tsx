@@ -36,6 +36,7 @@ import {
   GuestbookSection,
   StickersSection,
   SteamSection,
+  WebringSection,
   FooterSection,
 } from "./components/sections";
 import { AdminPanel } from "./components/AdminPanel";
@@ -269,6 +270,8 @@ function App() {
         return <StickersSection key="stickers" config={config} />;
       case "steam":
         return <SteamSection key="steam" config={config} />;
+      case "webring":
+        return <WebringSection key="webring" />;
       case "footer":
         return <FooterSection key="footer" config={config} />;
       default:

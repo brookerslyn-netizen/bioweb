@@ -13,6 +13,7 @@ export type SectionKey =
   | "guestbook"
   | "stickers"
   | "steam"
+  | "webring"
   | "footer";
 
 export type FavoritesItem = { emoji: string; label: string; note: string; imageUrl?: string };
@@ -256,6 +257,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     "guestbook",
     "stickers",
     "steam",
+    "webring",
     "footer",
   ],
 };
@@ -310,7 +312,7 @@ export function mergeConfig(base: AppConfig, override: Partial<AppConfig>): AppC
   // live in older saved configs (e.g. "stuffIMade" before it was removed).
   const VALID_SECTIONS: ReadonlySet<SectionKey> = new Set<SectionKey>([
     "hero", "marquee", "about", "now", "connections",
-    "recent", "favorites", "guestbook", "stickers", "steam", "footer",
+    "recent", "favorites", "guestbook", "stickers", "steam", "webring", "footer",
   ]);
 
   const rawOrder = override.sectionOrder ?? base.sectionOrder;

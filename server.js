@@ -144,7 +144,7 @@ async function readConfig() {
         spotify: true,
       },
       sectionOrder: [
-        "hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "footer"
+        "hero", "marquee", "about", "now", "connections", "recent", "favorites", "guestbook", "stickers", "steam", "webring", "footer"
       ],
     };
     await writeConfig(defaultConfig);
