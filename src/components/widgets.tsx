@@ -246,7 +246,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
     if (!steamId) { setLoading(false); return; }
     let cancelled = false;
 
-    (async () => {
+    const poll = async () => {
       try {
         const r = await fetch(`${API_BASE}/steam/profile?steamId=${steamId}`);
         if (!r.ok) throw new Error("Steam fetch failed");
@@ -256,9 +256,12 @@ export function SteamCard({ steamId }: { steamId: string }) {
         if (data.recentGames) setGames(data.recentGames);
       } catch { /* silently fail */ }
       finally { if (!cancelled) setLoading(false); }
-    })();
+    };
 
-    return () => { cancelled = true; };
+    poll();
+    // Re-fetch every 30s so in-game status updates without a page reload.
+    const iv = setInterval(poll, 30_000);
+    return () => { cancelled = true; clearInterval(iv); };
   }, [steamId]);
 
   if (!steamId) {
