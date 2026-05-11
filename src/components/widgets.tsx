@@ -20,6 +20,8 @@ import { useLanyard } from "./parts";
 import type { YTTrack } from "../lib/config";
 import { startVinylCrackle, stopVinylCrackle } from "../lib/sfx";
 
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3001/api");
+
 /* ===================== status helpers ===================== */
 
 function statusLabel(s?: string) {
@@ -197,9 +199,68 @@ export function EmailCard({ email }: { email: string }) {
   );
 }
 
-/* ===================== Steam recently-played widget ===================== */
+/* ===================== Steam profile widget ===================== */
+
+interface SteamProfile {
+  steamId: string;
+  name: string;
+  avatar: string;
+  profileUrl: string;
+  status: string;
+  isOnline: boolean;
+  currentGame: string | null;
+  currentGameId: string | null;
+}
+
+interface SteamRecentGame {
+  appId: number;
+  name: string;
+  iconUrl: string;
+  headerUrl: string;
+  playtime2Weeks: number;
+  playtimeForever: number;
+}
+
+function fmtHours(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = (minutes / 60).toFixed(1).replace(/\.0$/, "");
+  return `${h}h`;
+}
+
+const STATUS_COLORS: Record<string, string> = {
+  online: "#57cbde",
+  busy: "#e05f5f",
+  away: "#e0c05f",
+  snooze: "#e0c05f",
+  "looking to trade": "#57cbde",
+  "looking to play": "#57cbde",
+  offline: "#898989",
+};
 
 export function SteamCard({ steamId }: { steamId: string }) {
+  const [profile, setProfile] = useState<SteamProfile | null>(null);
+  const [games, setGames] = useState<SteamRecentGame[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!steamId) { setLoading(false); return; }
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const r = await fetch(`${API_BASE}/steam/profile?steamId=${steamId}`);
+        if (!r.ok) throw new Error("Steam fetch failed");
+        const data = await r.json();
+        if (cancelled) return;
+        if (data.profile) setProfile(data.profile);
+        if (data.recentGames) setGames(data.recentGames);
+      } catch { /* silently fail */ }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+
+    return () => { cancelled = true; };
+  }, [steamId]);
+
   if (!steamId) {
     return (
       <div className="rounded-2xl p-4 paper paper-text relative">
@@ -218,24 +279,98 @@ export function SteamCard({ steamId }: { steamId: string }) {
       </div>
     );
   }
-  return (
-    <a
-      href={`https://steamcommunity.com/profiles/${steamId}`}
-      target="_blank"
-      rel="noreferrer"
-      className="rounded-2xl p-4 paper paper-text flex items-center gap-3 hover:scale-[1.01] transition-transform"
-    >
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center palette-accent-bg">
-        <Gamepad2 size={20} />
-      </div>
-      <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">steam profile</div>
-        <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
-          /{steamId}
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl p-4 paper paper-text">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center palette-accent-bg animate-pulse">
+            <Gamepad2 size={20} />
+          </div>
+          <div className="text-sm paper-text-muted italic">loading steam...</div>
         </div>
-        <div className="text-xs paper-text-muted">click to open <ExternalLink size={11} className="inline" /></div>
       </div>
-    </a>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl p-4 paper paper-text space-y-3">
+      {/* Profile header */}
+      <a
+        href={profile?.profileUrl || `https://steamcommunity.com/profiles/${steamId}`}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-3 hover:opacity-90 transition-opacity"
+      >
+        {profile?.avatar ? (
+          <img src={profile.avatar} alt="" className="w-12 h-12 rounded-xl object-cover" />
+        ) : (
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center palette-accent-bg">
+            <Gamepad2 size={20} />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted flex items-center gap-1.5">
+            steam
+            {profile && (
+              <span className="inline-flex items-center gap-1">
+                <span
+                  className="w-2 h-2 rounded-full inline-block"
+                  style={{ background: STATUS_COLORS[profile.status] || STATUS_COLORS.offline }}
+                />
+                <span>{profile.status}</span>
+              </span>
+            )}
+          </div>
+          <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
+            {profile?.name || steamId}
+          </div>
+          {profile?.currentGame && (
+            <div className="text-xs paper-text-muted truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
+              ▶ playing <span className="font-medium paper-text">{profile.currentGame}</span>
+            </div>
+          )}
+        </div>
+        <ExternalLink size={14} className="paper-text-muted flex-shrink-0" />
+      </a>
+
+      {/* Recent games */}
+      {games.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="text-[10px] uppercase tracking-widest font-mono paper-text-muted">
+            recently played
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+            {games.map((g) => (
+              <a
+                key={g.appId}
+                href={`https://store.steampowered.com/app/${g.appId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-shrink-0 w-32 rounded-lg overflow-hidden paper-2 hover:scale-[1.03] transition-transform group"
+                title={`${g.name} — ${fmtHours(g.playtime2Weeks)} last 2 weeks`}
+              >
+                <img
+                  src={g.headerUrl}
+                  alt={g.name}
+                  className="w-full h-16 object-cover"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <div className="px-2 py-1.5">
+                  <div className="text-[11px] font-medium paper-text truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
+                    {g.name}
+                  </div>
+                  <div className="text-[10px] paper-text-muted font-mono">
+                    {fmtHours(g.playtime2Weeks)} · 2wk
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

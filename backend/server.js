@@ -34,6 +34,9 @@ const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '';
 const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || '';
 
+// Steam Web API — get a key at https://steamcommunity.com/dev/apikey
+const STEAM_API_KEY = process.env.STEAM_API_KEY || '';
+
 // === Rate-limit storage (in-memory; resets on redeploy) ===
 // IP -> last comment timestamp (ms)
 const commentIPLastPosted = new Map();
@@ -694,6 +697,63 @@ app.post('/api/moderation/block', requireAdmin, (req, res) => {
 // List blocked IPs (admin)
 app.get('/api/moderation/blocked', requireAdmin, (req, res) => {
   res.json({ blocked: Array.from(blockedIPs) });
+});
+
+// === Steam API ===
+
+// GET /api/steam/profile?steamId=<id>
+// Returns profile summary + currently playing + recent games (last 2 weeks).
+app.get('/api/steam/profile', async (req, res) => {
+  const steamId = String(req.query.steamId || '').trim();
+  if (!steamId) return res.status(400).json({ error: 'steamId required' });
+  if (!STEAM_API_KEY) return res.status(500).json({ error: 'Steam API key not configured' });
+
+  try {
+    const [summaryRes, recentRes] = await Promise.all([
+      fetch(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=${STEAM_API_KEY}&steamids=${steamId}`),
+      fetch(`https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=${STEAM_API_KEY}&steamid=${steamId}&count=5`),
+    ]);
+
+    const summaryData = await summaryRes.json();
+    const recentData = await recentRes.json();
+
+    const player = summaryData?.response?.players?.[0] || null;
+    const recentGames = (recentData?.response?.games || []).map((g) => ({
+      appId: g.appid,
+      name: g.name,
+      iconUrl: g.img_icon_url
+        ? `https://media.steampowered.com/steamcommunity/public/images/apps/${g.appid}/${g.img_icon_url}.jpg`
+        : '',
+      headerUrl: `https://cdn.akamai.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
+      playtime2Weeks: g.playtime_2weeks || 0, // minutes
+      playtimeForever: g.playtime_forever || 0, // minutes
+    }));
+
+    if (!player) {
+      return res.json({ error: 'Player not found', profile: null, recentGames: [] });
+    }
+
+    // personastate: 0=Offline, 1=Online, 2=Busy, 3=Away, 4=Snooze, 5=Looking to trade, 6=Looking to play
+    const stateLabels = ['offline', 'online', 'busy', 'away', 'snooze', 'looking to trade', 'looking to play'];
+
+    res.json({
+      profile: {
+        steamId: player.steamid,
+        name: player.personaname,
+        avatar: player.avatarfull || player.avatarmedium || player.avatar,
+        profileUrl: player.profileurl,
+        status: stateLabels[player.personastate] || 'offline',
+        isOnline: player.personastate > 0,
+        // gameextrainfo is set when the user is currently in-game
+        currentGame: player.gameextrainfo || null,
+        currentGameId: player.gameid || null,
+      },
+      recentGames,
+    });
+  } catch (error) {
+    console.error('Steam API error:', error);
+    res.status(500).json({ error: 'Failed to fetch Steam data' });
+  }
 });
 
 // Health check
