@@ -416,7 +416,7 @@ function MusicDock({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="fixed top-1/2 -translate-y-1/2 right-0 z-[45] pointer-events-none"
+      className="fixed bottom-3 right-0 z-[45] pointer-events-none"
     >
       {/* Panel — slides off to the right when minimized. */}
       <div
@@ -429,7 +429,8 @@ function MusicDock({ children }: { children: React.ReactNode }) {
         }}
       >
         {/* Pull tab sits on the LEFT edge of the panel and stays poking out of
-            the right side of the screen when the panel slides away. */}
+            the right side of the screen when the panel slides away. Anchored
+            roughly to the middle of the dock so it's easy to grab. */}
         <button
           onClick={() => setMinimized((m) => !m)}
           aria-label={minimized ? "show music player" : "hide music player"}
