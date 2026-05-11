@@ -269,7 +269,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
           >
             {nowPlaying ? nowPlaying.name : "not playing"}
           </div>
-          <div className="text-xs paper-text-muted truncate">
+          <div className="text-sm paper-text-muted truncate">
             {nowPlaying 
               ? `${nowPlaying.artist["#text"]}${nowPlaying.album?.["#text"] ? ` — ${nowPlaying.album["#text"]}` : ""}`
               : "not listening right now"
@@ -405,7 +405,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                           </button>
                         </div>
                         <div 
-                          className="text-xs font-medium paper-text truncate" 
+                          className="text-sm font-medium paper-text truncate" 
                           style={{ fontFamily: "'Indie Flower', cursive" }}
                           title={track.name}
                         >
@@ -480,7 +480,7 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
                         </div>
                       )}
                       <div
-                        className="text-xs font-medium paper-text truncate"
+                        className="text-sm font-medium paper-text truncate"
                         style={{ fontFamily: "'Indie Flower', cursive" }}
                         title={artist.name}
                       >
@@ -666,7 +666,7 @@ function ScrobbleStats({ info }: { info: LastFmUserInfo }) {
     : `${formatInt(plays)} scrobbles since my account was made`;
 
   return (
-    <div className="mt-3 px-3 py-2 rounded-lg paper-2 paper-text flex items-center gap-2 text-xs md:text-sm">
+    <div className="mt-3 px-3 py-2 rounded-lg paper-2 paper-text flex items-center gap-2 text-sm md:text-base">
       <BarChart2 size={14} className="paper-text-muted flex-shrink-0" />
       <span style={{ fontFamily: "'Indie Flower', cursive" }}>
         scrobbled{" "}

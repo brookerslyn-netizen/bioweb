@@ -71,7 +71,7 @@ export function SpotifyNowPlaying({
             <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
               not playing
             </div>
-            <div className="text-xs paper-text-muted truncate">not listening right now</div>
+            <div className="text-sm paper-text-muted truncate">not listening right now</div>
           </div>
           <a
             href={fallbackUrl}
@@ -103,7 +103,7 @@ export function SpotifyNowPlaying({
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
             {spotify.song}
           </div>
-          <div className="text-xs paper-text-muted truncate">
+          <div className="text-sm paper-text-muted truncate">
             {spotify.artist}
             {spotify.album ? ` — ${spotify.album}` : ""}
           </div>
@@ -153,7 +153,7 @@ export function DiscordCard({ discordId, showCopy }: { discordId: string; showCo
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
             {username}
           </div>
-          <div className="text-xs paper-text-muted">{status.label}</div>
+          <div className="text-sm paper-text-muted">{status.label}</div>
         </div>
         {showCopy && (
           <button
@@ -276,7 +276,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
             <div className="font-semibold paper-text" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
               steam id pending
             </div>
-            <div className="text-xs paper-text-muted">add via admin → contact → steam id</div>
+            <div className="text-sm paper-text-muted">add via admin → contact → steam id</div>
           </div>
         </div>
       </div>
@@ -329,7 +329,7 @@ export function SteamCard({ steamId }: { steamId: string }) {
             {profile?.name || steamId}
           </div>
           {!profile?.currentGame && games.length > 0 && (
-            <div className="text-xs paper-text-muted truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
+            <div className="text-sm paper-text-muted truncate" style={{ fontFamily: "'Indie Flower', cursive" }}>
               last 2 weeks: {games.length} game{games.length === 1 ? "" : "s"}
             </div>
           )}
@@ -771,7 +771,7 @@ export function MusicPlayer({
           <div className="font-semibold paper-text truncate" style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}>
             {displayTitle}
           </div>
-          {displayArtist && <div className="text-xs paper-text-muted truncate">{displayArtist}</div>}
+          {displayArtist && <div className="text-sm paper-text-muted truncate">{displayArtist}</div>}
         </div>
       </div>
 
