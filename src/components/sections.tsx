@@ -180,7 +180,8 @@ export function ConnectionsSection({ config }: { config: AppConfig }) {
           {config.contact.lastfmUsername && (
             <SpotifyLastFm 
               username={config.contact.lastfmUsername} 
-              spotifyUrl={config.contact.spotifyUrl} 
+              spotifyUrl={config.contact.spotifyUrl}
+              discordId={config.contact.discordId}
             />
           )}
         </div>

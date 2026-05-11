@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from "react";
-import { Music2, ExternalLink, BarChart2, ChevronDown, ChevronRight, Play, Pause, Loader2, Info } from "lucide-react";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { Music2, ExternalLink, BarChart2, ChevronDown, ChevronRight, Play, Pause, Loader2, Info, Mic2 } from "lucide-react";
+import { useLanyard, type LanyardSpotify } from "./parts";
 
 const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "/api" : "http://localhost:3001/api");
 const PLAY_YT_TRACK_EVENT = "play-yt-track";
@@ -53,9 +54,16 @@ interface LastFmUserInfo {
 interface SpotifyLastFmProps {
   username: string;
   spotifyUrl: string;
+  discordId?: string;
 }
 
-export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
+export function SpotifyLastFm({ username, spotifyUrl, discordId }: SpotifyLastFmProps) {
+  // Subscribe to Lanyard so we can prefer live Discord Spotify activity over
+  // Last.fm's scrobble (Last.fm is ~30s stale and doesn't know the playback
+  // position within the track).
+  const lanyard = useLanyard(discordId || "");
+  const liveSpotify: LanyardSpotify | null =
+    lanyard?.listening_to_spotify && lanyard.spotify ? lanyard.spotify : null;
   const [nowPlaying, setNowPlaying] = useState<LastFmTrack | null>(null);
   const [recent, setRecent] = useState<LastFmTrack[]>([]);
   const [topArtists, setTopArtists] = useState<LastFmTopArtist[]>([]);
@@ -244,13 +252,47 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
 
   const recentTracks = nowPlaying ? recent.slice(1) : recent;
 
+  // Unified "what's playing right now" view — Lanyard (live Discord Spotify
+  // activity with exact position) wins over Last.fm (30s-stale scrobbles).
+  const activeTrack = useMemo(() => {
+    if (liveSpotify) {
+      return {
+        source: "lanyard" as const,
+        name: liveSpotify.song || "",
+        artist: liveSpotify.artist || "",
+        album: liveSpotify.album || "",
+        cover: liveSpotify.album_art_url || "",
+        spotifyTrackId: liveSpotify.track_id || "",
+        spotifyUrl: liveSpotify.track_id
+          ? `https://open.spotify.com/track/${liveSpotify.track_id}`
+          : "",
+        startedAtMs: liveSpotify.timestamps?.start ?? 0,
+        endsAtMs: liveSpotify.timestamps?.end ?? 0,
+      };
+    }
+    if (nowPlaying) {
+      return {
+        source: "lastfm" as const,
+        name: nowPlaying.name,
+        artist: nowPlaying.artist["#text"],
+        album: nowPlaying.album["#text"] || "",
+        cover: getBestCover(nowPlaying.image),
+        spotifyTrackId: "",
+        spotifyUrl: "",
+        startedAtMs: 0,
+        endsAtMs: 0,
+      };
+    }
+    return null;
+  }, [liveSpotify, nowPlaying]);
+
   return (
     <div className="rounded-2xl p-4 paper paper-text">
       {/* Header / Now Playing */}
       <div className="flex items-center gap-3">
-        {nowPlaying && getBestCover(nowPlaying.image) ? (
+        {activeTrack?.cover ? (
           <img
-            src={getBestCover(nowPlaying.image)}
+            src={activeTrack.cover}
             alt=""
             className="w-12 h-12 rounded-xl object-cover animate-pulse"
           />
@@ -260,26 +302,40 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted">
-            {nowPlaying ? "▶ now playing" : "spotify"}
+          <div className="text-[12px] uppercase tracking-widest font-mono paper-text-muted flex items-center gap-1.5">
+            {activeTrack ? (
+              <>
+                <span>▶ now playing</span>
+                {activeTrack.source === "lanyard" && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ background: "rgba(29,185,84,0.18)", color: "#1db954" }}>
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#1db954" }} />
+                    live
+                  </span>
+                )}
+              </>
+            ) : (
+              <span>spotify</span>
+            )}
           </div>
-          <div 
-            className="font-semibold paper-text truncate" 
+          <div
+            className="font-semibold paper-text truncate"
             style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 22 }}
           >
-            {nowPlaying ? nowPlaying.name : "not playing"}
+            {activeTrack ? activeTrack.name : "not playing"}
           </div>
           <div className="text-sm paper-text-muted truncate">
-            {nowPlaying 
-              ? `${nowPlaying.artist["#text"]}${nowPlaying.album?.["#text"] ? ` — ${nowPlaying.album["#text"]}` : ""}`
-              : "not listening right now"
-            }
+            {activeTrack
+              ? `${activeTrack.artist}${activeTrack.album ? ` — ${activeTrack.album}` : ""}`
+              : "not listening right now"}
           </div>
         </div>
-        {/* play-along button — fetches brook's exact Spotify position, finds a
-            YouTube match, and seeks the persistent MusicPlayer to that second.
-            Shows the current position / total duration like "1:25 / 2:56". */}
-        {nowPlaying && (
+        {/* play-along button — Lanyard gives us the exact Spotify position via
+            timestamps.start, so for the live source we can seek precisely.
+            For Last.fm we fall back to /api/spotify/now-playing as before. */}
+        {activeTrack && activeTrack.source === "lanyard" && (
+          <LanyardPlayAlong active={activeTrack} />
+        )}
+        {activeTrack && activeTrack.source === "lastfm" && nowPlaying && (
           <NowPlayingPlayAlong
             track={nowPlaying}
             isPlaying={playingTrackUrl === nowPlaying.url}
@@ -297,6 +353,15 @@ export function SpotifyLastFm({ username, spotifyUrl }: SpotifyLastFmProps) {
           <ExternalLink size={14} className="paper-text-muted" />
         </a>
       </div>
+
+      {/* Lyrics panel — only shown when we have a live Spotify track id from
+          Lanyard (aureal.dev lyrics need the Spotify track id). */}
+      {activeTrack?.source === "lanyard" && activeTrack.spotifyTrackId && (
+        <LyricsPanel
+          trackId={activeTrack.spotifyTrackId}
+          startedAtMs={activeTrack.startedAtMs}
+        />
+      )}
 
       {/* Scrobble stats — total plays since account creation, with listen-time tooltip */}
       {userInfo && parseInt(userInfo.playcount) > 0 && (
@@ -695,4 +760,242 @@ function ScrobbleStats({ info }: { info: LastFmUserInfo }) {
       </span>
     </div>
   );
+}
+
+/* ===================== Lanyard play-along ===================== */
+
+type LanyardActive = {
+  name: string;
+  artist: string;
+  album: string;
+  cover: string;
+  spotifyTrackId: string;
+  spotifyUrl: string;
+  startedAtMs: number;
+  endsAtMs: number;
+};
+
+function LanyardPlayAlong({ active }: { active: LanyardActive }) {
+  const [playing, setPlaying] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [, setTick] = useState(0);
+
+  // listen for "track ended" broadcasts from MusicPlayer so our button state
+  // resets when a different track takes over.
+  useEffect(() => {
+    const onStop = () => setPlaying(false);
+    window.addEventListener("yt-track-ended", onStop);
+    return () => window.removeEventListener("yt-track-ended", onStop);
+  }, []);
+
+  // re-render every second so the position readout keeps ticking without the
+  // entire widget's fetch cycle.
+  useEffect(() => {
+    const iv = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const now = Date.now();
+  const elapsedMs = Math.max(0, now - active.startedAtMs);
+  const durationMs = Math.max(0, active.endsAtMs - active.startedAtMs);
+  const progressMs = durationMs > 0 ? Math.min(elapsedMs, durationMs) : elapsedMs;
+
+  const handleClick = async () => {
+    if (playing) {
+      window.dispatchEvent(new CustomEvent(PLAY_YT_TRACK_EVENT, { detail: null }));
+      setPlaying(false);
+      return;
+    }
+    setSearching(true);
+    try {
+      const startSeconds = Math.max(0, Math.floor((Date.now() - active.startedAtMs) / 1000));
+      const query = encodeURIComponent(`${active.name} ${active.artist}`);
+      const ytRes = await fetch(`${API_BASE}/youtube/search?q=${query}`);
+      if (!ytRes.ok) throw new Error("Search failed");
+      const ytData = await ytRes.json();
+      window.dispatchEvent(
+        new CustomEvent(PLAY_YT_TRACK_EVENT, {
+          detail: {
+            videoId: ytData.videoId,
+            title: active.name,
+            artist: active.artist,
+            startSeconds,
+          },
+        }),
+      );
+      setPlaying(true);
+    } catch { /* silently fail */ } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
+      <button
+        onClick={handleClick}
+        title={playing ? "stop" : "play along"}
+        aria-label={playing ? "stop playback" : "play along"}
+        className="w-10 h-10 rounded-full flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform"
+        style={{ background: "var(--p-accent)", color: "var(--p-accent-contrast)" }}
+      >
+        {searching ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : playing ? (
+          <Pause size={16} />
+        ) : (
+          <Play size={16} className="ml-0.5" />
+        )}
+      </button>
+      {durationMs > 0 && (
+        <span className="text-[11px] font-mono paper-text-muted tabular-nums whitespace-nowrap">
+          {fmtTime(progressMs)} / {fmtTime(durationMs)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ===================== Lyrics panel (lyrics.aureal.dev) ===================== */
+
+interface LyricLine { time: number; text: string }
+
+function LyricsPanel({ trackId, startedAtMs }: { trackId: string; startedAtMs: number }) {
+  const [lines, setLines] = useState<LyricLine[] | null>(null);
+  const [plain, setPlain] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [tick, setTick] = useState(0);
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  // fetch lyrics whenever the track changes
+  useEffect(() => {
+    let cancelled = false;
+    setLines(null);
+    setPlain("");
+    setLoading(true);
+    setOpen(false);
+    (async () => {
+      try {
+        const r = await fetch(`https://lyrics.aureal.dev/api/lyrics/${encodeURIComponent(trackId)}`);
+        if (!r.ok) throw new Error("no lyrics");
+        const data = await r.json();
+        if (cancelled) return;
+        // aureal returns either { syncedLyrics, plainLyrics, ... } or similar.
+        // We sniff both common shapes so small API tweaks don't break us.
+        const synced = data.syncedLyrics || data.synced || data.synced_lyrics;
+        const plainText = data.plainLyrics || data.plain || data.plain_lyrics || data.lyrics;
+        if (typeof synced === "string" && synced.length > 0) {
+          setLines(parseLRC(synced));
+        }
+        if (typeof plainText === "string") setPlain(plainText);
+      } catch { /* ignore */ }
+      finally { if (!cancelled) setLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [trackId]);
+
+  // tick every 400ms while the panel is open so the current line advances
+  useEffect(() => {
+    if (!open) return;
+    const iv = setInterval(() => setTick((t) => t + 1), 400);
+    return () => clearInterval(iv);
+  }, [open]);
+  void tick;
+
+  // scroll the active line into view when it changes
+  const currentMs = Date.now() - startedAtMs;
+  const activeIdx = useMemo(() => {
+    if (!lines) return -1;
+    let idx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].time <= currentMs) idx = i; else break;
+    }
+    return idx;
+  }, [lines, currentMs]);
+
+  useEffect(() => {
+    if (!open || activeIdx < 0 || !listRef.current) return;
+    const el = listRef.current.querySelector<HTMLElement>(`[data-line="${activeIdx}"]`);
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [activeIdx, open]);
+
+  if (loading) return null;
+  if (!lines && !plain) return null;
+
+  return (
+    <div className="mt-3 rounded-lg paper-2 overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-mono uppercase tracking-wider hover:bg-black/5 transition-colors"
+        style={{ color: "var(--paper-ink-soft)" }}
+      >
+        <span className="flex items-center gap-1.5">
+          <Mic2 size={12} />
+          lyrics {lines ? "· synced" : "· text only"}
+        </span>
+        {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+      </button>
+
+      {open && (
+        <div
+          ref={listRef}
+          className="max-h-56 overflow-y-auto px-3 py-2 space-y-1"
+          style={{ scrollbarWidth: "thin" }}
+        >
+          {lines ? (
+            lines.map((line, i) => {
+              const isActive = i === activeIdx;
+              return (
+                <div
+                  key={i}
+                  data-line={i}
+                  className="transition-all duration-200"
+                  style={{
+                    fontFamily: "'Indie Flower', cursive",
+                    fontSize: isActive ? 18 : 14,
+                    color: isActive ? "var(--p-text)" : "var(--paper-ink-soft)",
+                    opacity: isActive ? 1 : 0.55,
+                    fontWeight: isActive ? 600 : 400,
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {line.text || "♪"}
+                </div>
+              );
+            })
+          ) : (
+            <pre
+              className="whitespace-pre-wrap paper-text"
+              style={{ fontFamily: "'Indie Flower', cursive", fontSize: 14 }}
+            >
+              {plain}
+            </pre>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Parse an LRC-style string into {time(ms), text} pairs. Drops lines with
+ *  no timestamp. Tolerant of Windows/Unix line endings. */
+function parseLRC(src: string): LyricLine[] {
+  const out: LyricLine[] = [];
+  const lineRx = /\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\]/g;
+  for (const raw of src.split(/\r?\n/)) {
+    const text = raw.replace(lineRx, "").trim();
+    // reset regex state
+    lineRx.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    const times: number[] = [];
+    while ((m = lineRx.exec(raw)) !== null) {
+      const mm = parseInt(m[1], 10);
+      const ss = parseInt(m[2], 10);
+      const ms = m[3] ? parseInt(m[3].padEnd(3, "0").slice(0, 3), 10) : 0;
+      times.push(mm * 60000 + ss * 1000 + ms);
+    }
+    for (const t of times) out.push({ time: t, text });
+  }
+  out.sort((a, b) => a.time - b.time);
+  return out;
 }
