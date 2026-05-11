@@ -589,9 +589,9 @@ export function MusicPlayer({
   }, [activeVideoId]);
 
   // Heuristic — only surface the "make video the background" button when the
-  // loaded video looks like an actual MV / music video. Covers common tags
-  // used by labels + artists + uploaders.
-  const looksLikeMV = /\b(?:m\/?v|music\s*video|mv|official\s*video|official\s*(?:music\s*)?mv|official\s*audio|official\s*hd\s*video)\b/i
+  // loaded video looks like an actual MV / music video. "Official Audio" is
+  // excluded because those are usually just static cover images.
+  const looksLikeMV = /\b(?:m\/?v|music\s*video|mv|official\s*video|official\s*(?:music\s*)?mv|official\s*hd\s*video)\b/i
     .test(ytTitle);
   // If the user had bg enabled but the current track isn't a recognized MV,
   // turn the backdrop off so we don't render over a static image.
