@@ -354,11 +354,16 @@ export function SpotifyLastFm({ username, spotifyUrl, discordId }: SpotifyLastFm
         </a>
       </div>
 
-      {/* Lyrics panel — only shown when we have a live Spotify track id from
-          Lanyard (aureal.dev lyrics need the Spotify track id). */}
-      {activeTrack?.source === "lanyard" && activeTrack.spotifyTrackId && (
+      {/* Lyrics panel — shows synced lyrics for the currently playing Lanyard
+          track via aureal.dev (a self-hosted LRCLib instance). */}
+      {activeTrack?.source === "lanyard" && (
         <LyricsPanel
-          trackId={activeTrack.spotifyTrackId}
+          trackName={activeTrack.name}
+          artist={activeTrack.artist}
+          album={activeTrack.album}
+          durationSec={activeTrack.endsAtMs > activeTrack.startedAtMs
+            ? Math.round((activeTrack.endsAtMs - activeTrack.startedAtMs) / 1000)
+            : 0}
           startedAtMs={activeTrack.startedAtMs}
         />
       )}
@@ -855,11 +860,23 @@ function LanyardPlayAlong({ active }: { active: LanyardActive }) {
   );
 }
 
-/* ===================== Lyrics panel (lyrics.aureal.dev) ===================== */
+/* ===================== Lyrics panel (lyrics.aureal.dev / LRCLib-compatible) ===================== */
 
 interface LyricLine { time: number; text: string }
 
-function LyricsPanel({ trackId, startedAtMs }: { trackId: string; startedAtMs: number }) {
+function LyricsPanel({
+  trackName,
+  artist,
+  album,
+  durationSec,
+  startedAtMs,
+}: {
+  trackName: string;
+  artist: string;
+  album: string;
+  durationSec: number;
+  startedAtMs: number;
+}) {
   const [lines, setLines] = useState<LyricLine[] | null>(null);
   const [plain, setPlain] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -867,32 +884,53 @@ function LyricsPanel({ trackId, startedAtMs }: { trackId: string; startedAtMs: n
   const [tick, setTick] = useState(0);
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  // fetch lyrics whenever the track changes
+  // fetch lyrics whenever the track changes. aureal.dev mirrors LRCLib's API
+  // surface so /api/get is the exact-match endpoint and /api/search is the
+  // fallback when the exact album/duration combo isn't indexed.
   useEffect(() => {
+    if (!trackName || !artist) return;
     let cancelled = false;
     setLines(null);
     setPlain("");
     setLoading(true);
     setOpen(false);
+
+    const params = new URLSearchParams({
+      track_name: trackName,
+      artist_name: artist,
+    });
+    if (album) params.set("album_name", album);
+    if (durationSec > 0) params.set("duration", String(durationSec));
+
+    const apply = (data: { syncedLyrics?: string; plainLyrics?: string } | null) => {
+      if (cancelled || !data) return;
+      if (typeof data.syncedLyrics === "string" && data.syncedLyrics.length > 0) {
+        setLines(parseLRC(data.syncedLyrics));
+      }
+      if (typeof data.plainLyrics === "string") setPlain(data.plainLyrics);
+    };
+
     (async () => {
       try {
-        const r = await fetch(`https://lyrics.aureal.dev/api/lyrics/${encodeURIComponent(trackId)}`);
-        if (!r.ok) throw new Error("no lyrics");
-        const data = await r.json();
-        if (cancelled) return;
-        // aureal returns either { syncedLyrics, plainLyrics, ... } or similar.
-        // We sniff both common shapes so small API tweaks don't break us.
-        const synced = data.syncedLyrics || data.synced || data.synced_lyrics;
-        const plainText = data.plainLyrics || data.plain || data.plain_lyrics || data.lyrics;
-        if (typeof synced === "string" && synced.length > 0) {
-          setLines(parseLRC(synced));
+        // exact match
+        let r = await fetch(`https://lyrics.aureal.dev/api/get?${params.toString()}`);
+        if (r.ok) {
+          apply(await r.json());
+        } else if (r.status === 404) {
+          // fallback: search by name + artist
+          const search = new URLSearchParams({ track_name: trackName, artist_name: artist });
+          r = await fetch(`https://lyrics.aureal.dev/api/search?${search.toString()}`);
+          if (r.ok) {
+            const arr = await r.json();
+            if (Array.isArray(arr) && arr.length > 0) apply(arr[0]);
+          }
         }
-        if (typeof plainText === "string") setPlain(plainText);
       } catch { /* ignore */ }
       finally { if (!cancelled) setLoading(false); }
     })();
+
     return () => { cancelled = true; };
-  }, [trackId]);
+  }, [trackName, artist, album, durationSec]);
 
   // tick every 400ms while the panel is open so the current line advances
   useEffect(() => {
