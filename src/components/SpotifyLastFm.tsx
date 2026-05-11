@@ -650,14 +650,18 @@ function NowPlayingPlayAlong({
     }
 
     setLoading(true);
+    // Lead offset — the YouTube search + iframe buffer takes ~2s before audio
+    // starts; without this we land noticeably behind the live position.
+    const LEAD_SECONDS = 2.3;
+    const searchStart = Date.now();
     try {
       // Fetch fresh position right before playing so we're as close as possible
       const r = await fetch(`${API_BASE}/spotify/now-playing`);
-      let startSeconds = 0;
+      let basePositionMs = 0;
       if (r.ok) {
         const data = await r.json();
         if (data.isPlaying && data.progressMs) {
-          startSeconds = Math.floor(data.progressMs / 1000);
+          basePositionMs = data.progressMs;
           setProgressMs(data.progressMs);
           setDurationMs(data.track?.durationMs ?? durationMs);
         }
@@ -668,6 +672,11 @@ function NowPlayingPlayAlong({
       const ytRes = await fetch(`${API_BASE}/youtube/search?q=${query}`);
       if (!ytRes.ok) throw new Error("Search failed");
       const ytData = await ytRes.json();
+
+      // Add the search roundtrip time + the lead window so YT starts at the
+      // position Spotify will be at by the time the iframe finishes buffering.
+      const lagSec = (Date.now() - searchStart) / 1000;
+      const startSeconds = Math.max(0, Math.floor(basePositionMs / 1000 + lagSec + LEAD_SECONDS));
 
       // Dispatch with startSeconds so MusicPlayer seeks to brook's position
       window.dispatchEvent(
@@ -812,12 +821,26 @@ function LanyardPlayAlong({ active }: { active: LanyardActive }) {
       return;
     }
     setSearching(true);
+    // Lead offset — covers the gap between "user clicked" and "YouTube iframe
+    // actually starts audio." Rough breakdown:
+    //   ~0.5s: /api/youtube/search roundtrip
+    //   ~0.3s: CustomEvent + React state + loadVideoById call
+    //   ~1.5s: YT player buffering before it starts emitting audio
+    // Without this, starting at Spotify's exact second puts us ~2.3s behind.
+    const LEAD_SECONDS = 2.3;
+    const searchStart = Date.now();
     try {
-      const startSeconds = Math.max(0, Math.floor((Date.now() - active.startedAtMs) / 1000));
       const query = encodeURIComponent(`${active.name} ${active.artist}`);
       const ytRes = await fetch(`${API_BASE}/youtube/search?q=${query}`);
       if (!ytRes.ok) throw new Error("Search failed");
       const ytData = await ytRes.json();
+
+      // Recompute startSeconds right before dispatch so we account for however
+      // long the actual network call took, then add the lead.
+      const elapsedSec = (Date.now() - active.startedAtMs) / 1000;
+      const lagSec = (Date.now() - searchStart) / 1000;
+      const startSeconds = Math.max(0, Math.floor(elapsedSec + lagSec + LEAD_SECONDS));
+
       window.dispatchEvent(
         new CustomEvent(PLAY_YT_TRACK_EVENT, {
           detail: {
