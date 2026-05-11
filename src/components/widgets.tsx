@@ -515,6 +515,7 @@ type YTPlayer = {
   setVolume: (v: number) => void;
   getCurrentTime: () => number;
   getDuration: () => number;
+  seekTo: (seconds: number, allowSeekAhead?: boolean) => void;
   destroy: () => void;
 };
 
@@ -850,6 +851,7 @@ export function MusicPlayer({
         <BackgroundVideo
           videoId={activeVideoId}
           getTime={() => playerRef.current?.getCurrentTime() ?? 0}
+          seekAudio={(s) => playerRef.current?.seekTo(Math.max(0, s), true)}
           playing={playing}
         />
       )}
@@ -870,10 +872,12 @@ export function MusicPlayer({
 function BackgroundVideo({
   videoId,
   getTime,
+  seekAudio,
   playing,
 }: {
   videoId: string;
   getTime: () => number;
+  seekAudio: (seconds: number) => void;
   playing: boolean;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -890,11 +894,13 @@ function BackgroundVideo({
       wrapRef.current.innerHTML = "";
       const host = document.createElement("div");
       wrapRef.current.appendChild(host);
-      const startAt = Math.max(0, Math.floor(getTime() + 1.5));
+      const startAt = Math.max(0, Math.floor(getTime()));
       playerRef.current = new window.YT!.Player(host, {
         width: "100%",
         height: "100%",
         videoId,
+        // use nocookie domain + strip every UI affordance we can pass via params
+        host: "https://www.youtube-nocookie.com",
         playerVars: {
           autoplay: 1,
           controls: 0,
@@ -906,6 +912,8 @@ function BackgroundVideo({
           rel: 0,
           iv_load_policy: 3,
           fs: 0,
+          showinfo: 0,
+          cc_load_policy: 0,
         },
         events: {
           onReady: (e: { target: YTPlayer }) => {
@@ -931,29 +939,27 @@ function BackgroundVideo({
     else playerRef.current.pauseVideo();
   }, [playing, ready]);
 
-  // keep the bg video in sync with the audio player. We intentionally add a
-  // small lead to the target time because the bg iframe takes a beat to
-  // re-buffer after a jump, so without this correction the visuals tend to
-  // land ahead of the audio. Tune SYNC_LEAD_SECONDS if it feels off.
+  // keep the audio in sync with the video — the video is always the source of
+  // truth here so there's no artificial delay baked into either stream. If the
+  // audio drifts more than ~0.3s from the bg video we nudge the audio player
+  // to match. This avoids the "video is 1.5s early" feel where we used to
+  // seek the video instead.
   useEffect(() => {
     if (!ready) return;
-    const SYNC_LEAD_SECONDS = 1.5;
-    const MAX_DRIFT = 0.35;
+    const MAX_DRIFT = 0.3;
     const iv = setInterval(() => {
       const p = playerRef.current;
       if (!p) return;
-      const bgTime = p.getCurrentTime();
+      const videoTime = p.getCurrentTime();
       const audioTime = getTime();
-      const drift = bgTime - audioTime;
-      // if the bg is more than MAX_DRIFT out of sync in either direction, jump
-      // to the audio position plus the lead window
+      if (!isFinite(videoTime) || videoTime <= 0) return;
+      const drift = audioTime - videoTime;
       if (Math.abs(drift) > MAX_DRIFT) {
-        const target = Math.max(0, audioTime + SYNC_LEAD_SECONDS);
-        p.loadVideoById({ videoId, startSeconds: Math.floor(target) });
+        seekAudio(videoTime);
       }
     }, 1500);
     return () => clearInterval(iv);
-  }, [ready, videoId, getTime]);
+  }, [ready, getTime, seekAudio]);
 
   return createPortal(
     <div
@@ -974,12 +980,37 @@ function BackgroundVideo({
           position: absolute !important;
           top: 50% !important;
           left: 50% !important;
-          width: max(100vw, 177.78vh) !important;
-          height: max(56.25vw, 100vh) !important;
+          /* scale past 100% so YouTube's top/bottom gradient + chrome land
+             outside the visible viewport */
+          width: max(115vw, 204.44vh) !important;
+          height: max(64.7vw, 115vh) !important;
           transform: translate(-50%, -50%) !important;
           pointer-events: none !important;
         }
       `}</style>
+      {/* extra masks to hide any residual YT UI in case the scale isn't enough:
+          top + bottom bands that exactly match the page background colour so
+          the title/controls strips blend into nothing. */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0,
+          height: 120,
+          zIndex: 2,
+          background: "linear-gradient(180deg, var(--p-bg, #070f0a) 0%, rgba(0,0,0,0.8) 70%, transparent 100%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0, left: 0, right: 0,
+          height: 120,
+          zIndex: 2,
+          background: "linear-gradient(0deg, var(--p-bg, #070f0a) 0%, rgba(0,0,0,0.8) 70%, transparent 100%)",
+          pointerEvents: "none",
+        }}
+      />
       {/* darkening overlay so page content stays readable — rendered after the
           iframe via stacking context so it sits on top */}
       <div
