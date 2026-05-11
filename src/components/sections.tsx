@@ -446,6 +446,8 @@ export function WebringSection() {
           <div className="flex flex-wrap items-center gap-3">
             <a
               href={data.prev.url}
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl paper-2 paper-text hover:scale-[1.04] transition-transform"
               style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 18 }}
             >
@@ -454,6 +456,8 @@ export function WebringSection() {
 
             <a
               href={data.random.url}
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl palette-accent-bg hover:scale-[1.04] transition-transform shadow-sm"
               style={{
                 fontFamily: "'Shadows Into Light', cursive",
@@ -466,6 +470,8 @@ export function WebringSection() {
 
             <a
               href={data.next.url}
+              target="_blank"
+              rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl paper-2 paper-text hover:scale-[1.04] transition-transform"
               style={{ fontFamily: "'Shadows Into Light', cursive", fontSize: 18 }}
             >
