@@ -112,6 +112,8 @@ export function CommentsSection({
     } catch (err: any) {
       if (err.message?.includes("429") || err.message?.includes("already")) {
         setError("one note per visitor!");
+      } else if (err.message?.includes("inappropriate")) {
+        setError("watch your language!");
       } else {
         setError("failed to send, try again.");
       }
