@@ -111,6 +111,8 @@ export function CommentsSection({
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("429") || msg.includes("already")) {
         setError("one note per visitor!");
+      } else if (msg.includes("inappropriate")) {
+        setError("watch your language!");
       } else {
         setError("failed to send, try again.");
       }

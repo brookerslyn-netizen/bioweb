@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import ytSearch from 'yt-search';
+import { checkMessage, checkName } from './wordFilter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -307,6 +308,16 @@ app.post('/api/comments', async (req, res) => {
 
     if (blockedIPs.has(clientIP)) {
       return res.status(403).json({ error: 'You are blocked from commenting.' });
+    }
+
+    // Profanity / slur filter
+    const nameCheck = checkName(name);
+    if (nameCheck.blocked) {
+      return res.status(400).json({ error: 'your name contains inappropriate language. please be respectful!' });
+    }
+    const messageCheck = checkMessage(message);
+    if (messageCheck.blocked) {
+      return res.status(400).json({ error: 'your message contains inappropriate language. please be respectful!' });
     }
 
     const last = commentIPLastPosted.get(clientIP);
